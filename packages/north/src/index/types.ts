@@ -7,6 +7,7 @@ export interface IndexStats {
   usageCount: number;
   patternCount: number;
   tokenGraphCount: number;
+  componentGraphCount: number;
   classSiteCount: number;
 }
 
