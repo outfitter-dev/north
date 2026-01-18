@@ -4,6 +4,7 @@ import { Command } from "commander";
 import { check } from "../commands/check.ts";
 import { doctor } from "../commands/doctor.ts";
 import { generateTokens } from "../commands/gen.ts";
+import { runIndex } from "../commands/index.ts";
 import { init } from "../commands/init.ts";
 
 const VERSION = "0.1.0";
@@ -91,6 +92,31 @@ program
       config: options.config,
       json: options.json,
       staged: options.staged,
+    });
+
+    if (!result.success) {
+      process.exit(1);
+    }
+  });
+
+// ============================================================================
+// index - Build and inspect the index
+// ============================================================================
+
+program
+  .command("index")
+  .description("Build and inspect the index")
+  .option("-c, --config <path>", "Path to config file")
+  .option("--status", "Show index status")
+  .option("--check-fresh", "Check index freshness")
+  .option("-q, --quiet", "Suppress output")
+  .action(async (options) => {
+    const result = await runIndex({
+      cwd: process.cwd(),
+      config: options.config,
+      status: options.status,
+      checkFresh: options.checkFresh,
+      quiet: options.quiet,
     });
 
     if (!result.success) {

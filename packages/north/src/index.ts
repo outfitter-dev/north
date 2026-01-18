@@ -13,6 +13,7 @@ export {
   type ThirdPartyConfig,
   type RegistryConfig,
   type LintConfig,
+  type IndexConfig,
   type RadiusDial,
   type ShadowsDial,
   type DensityDial,
@@ -108,3 +109,22 @@ export {
   type CheckResult,
   CheckError,
 } from "./commands/check.ts";
+
+export {
+  runIndex,
+  type IndexOptions,
+  type IndexResult,
+  IndexError,
+} from "./commands/index.ts";
+
+// Index exports
+export { buildIndex } from "./index/build.ts";
+export { checkIndexFresh, getIndexStatus } from "./index/queries.ts";
+export type {
+  IndexBuildResult,
+  IndexFreshness,
+  IndexStatus,
+  IndexStats,
+  TokenRecord,
+  UsageRecord,
+} from "./index/types.ts";

@@ -187,6 +187,19 @@ export const LintConfigSchema = z
 export type LintConfig = z.infer<typeof LintConfigSchema>;
 
 // ============================================================================
+// Index Configuration
+// ============================================================================
+
+export const IndexConfigSchema = z
+  .object({
+    path: z.string().optional(),
+    committable: z.boolean().optional(),
+  })
+  .optional();
+
+export type IndexConfig = z.infer<typeof IndexConfigSchema>;
+
+// ============================================================================
 // Main North Configuration
 // ============================================================================
 
@@ -200,6 +213,7 @@ export const NorthConfigSchema = z.object({
   "third-party": ThirdPartyConfigSchema.optional(),
   registry: RegistryConfigSchema.optional(),
   lint: LintConfigSchema,
+  index: IndexConfigSchema,
 });
 
 export type NorthConfig = z.infer<typeof NorthConfigSchema>;

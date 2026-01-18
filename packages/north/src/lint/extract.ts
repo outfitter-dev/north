@@ -1,6 +1,6 @@
 import { Lang, type SgNode, parse } from "@ast-grep/napi";
 import { getContext } from "./context.ts";
-import type { ClassToken, ExtractionResult, NonLiteralSite } from "./types.ts";
+import type { ClassSite, ClassToken, ExtractionResult, NonLiteralSite } from "./types.ts";
 
 const DEFAULT_CLASS_FUNCTIONS = ["cn", "clsx", "cva"] as const;
 
@@ -235,9 +235,10 @@ export function extractClassTokens(
 ): ExtractionResult {
   const classFunctions = options.classFunctions ?? [...DEFAULT_CLASS_FUNCTIONS];
   const root = parse(Lang.Tsx, source);
-  const context = getContext(filePath);
+  const context = getContext(filePath, source);
 
   const tokens: ClassToken[] = [];
+  const sites: ClassSite[] = [];
   const nonLiteralSites: NonLiteralSite[] = [];
   let classSites = 0;
 
@@ -262,6 +263,8 @@ export function extractClassTokens(
       });
     }
 
+    const siteClasses: string[] = [];
+
     for (const fragment of analysis.fragments) {
       const classTokens = splitClassTokens(fragment.text);
       for (const token of classTokens) {
@@ -272,6 +275,10 @@ export function extractClassTokens(
           token.startOffset
         );
 
+        if (token.value.length > 0) {
+          siteClasses.push(token.value);
+        }
+
         tokens.push({
           value: token.value,
           filePath,
@@ -281,6 +288,14 @@ export function extractClassTokens(
         });
       }
     }
+
+    sites.push({
+      filePath,
+      line: range.start.line + 1,
+      column: range.start.column + 1,
+      context,
+      classes: siteClasses,
+    });
   }
 
   const callExpressions = root.root().findAll({ rule: { kind: "call_expression" } });
@@ -307,6 +322,8 @@ export function extractClassTokens(
       });
     }
 
+    const siteClasses: string[] = [];
+
     for (const fragment of analysis.fragments) {
       const classTokens = splitClassTokens(fragment.text);
       for (const token of classTokens) {
@@ -317,6 +334,10 @@ export function extractClassTokens(
           token.startOffset
         );
 
+        if (token.value.length > 0) {
+          siteClasses.push(token.value);
+        }
+
         tokens.push({
           value: token.value,
           filePath,
@@ -326,10 +347,19 @@ export function extractClassTokens(
         });
       }
     }
+
+    sites.push({
+      filePath,
+      line: range.start.line + 1,
+      column: range.start.column + 1,
+      context,
+      classes: siteClasses,
+    });
   }
 
   return {
     tokens,
+    sites,
     nonLiteralSites,
     classSites,
   };

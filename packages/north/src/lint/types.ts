@@ -55,6 +55,14 @@ export interface ClassToken {
   context: LintContext;
 }
 
+export interface ClassSite {
+  filePath: string;
+  line: number;
+  column: number;
+  context: LintContext;
+  classes: string[];
+}
+
 export interface NonLiteralSite {
   filePath: string;
   line: number;
@@ -64,6 +72,7 @@ export interface NonLiteralSite {
 
 export interface ExtractionResult {
   tokens: ClassToken[];
+  sites: ClassSite[];
   nonLiteralSites: NonLiteralSite[];
   classSites: number;
 }

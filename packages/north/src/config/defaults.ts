@@ -18,6 +18,8 @@ export const DEFAULT_DENSITY: DensityDial = "default";
 export const DEFAULT_CONTRAST: ContrastDial = "default";
 export const DEFAULT_TYPOGRAPHY_SCALE: TypographyScaleDial = "default";
 export const DEFAULT_COMPLEXITY: ComplexityDial = "progressive";
+export const DEFAULT_INDEX_PATH = ".north/index.db";
+export const DEFAULT_INDEX_COMMITTABLE = false;
 
 // Typography measure defaults (characters per line)
 export const DEFAULT_MEASURE_MIN = 45;
@@ -70,6 +72,10 @@ export const DEFAULT_CONFIG: NorthConfig = {
   },
   policy: {
     complexity: DEFAULT_COMPLEXITY,
+  },
+  index: {
+    path: DEFAULT_INDEX_PATH,
+    committable: DEFAULT_INDEX_COMMITTABLE,
   },
   colors: DEFAULT_COLORS_LIGHT,
   rules: {
@@ -167,6 +173,11 @@ rules:
 # lint:
 #   classFunctions: [cn, clsx, cva]
 
+# Index configuration (optional)
+# index:
+#   path: .north/index.db
+#   committable: false
+
 # Third-party component policy
 third-party:
   allowed:
@@ -201,6 +212,10 @@ export function applyDefaults(config: Partial<NorthConfig>): NorthConfig {
     },
     policy: {
       complexity: config.policy?.complexity ?? DEFAULT_COMPLEXITY,
+    },
+    index: {
+      path: config.index?.path ?? DEFAULT_INDEX_PATH,
+      committable: config.index?.committable ?? DEFAULT_INDEX_COMMITTABLE,
     },
     colors: config.colors ?? DEFAULT_COLORS_LIGHT,
     rules: config.rules ?? DEFAULT_CONFIG.rules,
