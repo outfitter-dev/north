@@ -2,6 +2,7 @@
 
 import { Command } from "commander";
 import { check } from "../commands/check.ts";
+import { context } from "../commands/context.ts";
 import { doctor } from "../commands/doctor.ts";
 import { find } from "../commands/find.ts";
 import { generateTokens } from "../commands/gen.ts";
@@ -68,10 +69,43 @@ program
   .command("doctor")
   .description("Validate North setup and configuration")
   .option("--lint", "Run lint diagnostics (rules + extraction coverage)")
+  .option("--fail-on-drift", "Fail when generated files or index are stale")
+  .option("--json", "Output JSON")
+  .option("-q, --quiet", "Suppress output")
+  .option("--verbose", "Show extra diagnostics")
   .action(async (options) => {
     const result = await doctor({
       cwd: process.cwd(),
       lint: options.lint,
+      failOnDrift: options.failOnDrift,
+      json: options.json,
+      quiet: options.quiet,
+      verbose: options.verbose,
+    });
+
+    if (!result.success) {
+      process.exit(1);
+    }
+  });
+
+// ============================================================================
+// context - LLM/system prompt context
+// ============================================================================
+
+program
+  .command("context")
+  .description("Print design system context for agents and LLMs")
+  .option("-c, --config <path>", "Path to config file")
+  .option("--compact", "Output minimal context")
+  .option("--json", "Output JSON")
+  .option("-q, --quiet", "Suppress output")
+  .action(async (options) => {
+    const result = await context({
+      cwd: process.cwd(),
+      config: options.config,
+      compact: options.compact,
+      json: options.json,
+      quiet: options.quiet,
     });
 
     if (!result.success) {
