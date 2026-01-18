@@ -7,6 +7,8 @@ import { find } from "../commands/find.ts";
 import { generateTokens } from "../commands/gen.ts";
 import { runIndex } from "../commands/index.ts";
 import { init } from "../commands/init.ts";
+import { promote } from "../commands/promote.ts";
+import { refactor } from "../commands/refactor.ts";
 
 const VERSION = "0.1.0";
 
@@ -132,6 +134,79 @@ program
       similar: options.similar,
       threshold: options.threshold,
       limit: options.limit,
+    });
+
+    if (!result.success) {
+      process.exit(1);
+    }
+  });
+
+// ============================================================================
+// promote - Promote class pattern to utility/token
+// ============================================================================
+
+program
+  .command("promote")
+  .description("Promote a class pattern into a utility")
+  .argument("<pattern>", "Class pattern to promote")
+  .option("-c, --config <path>", "Path to config file")
+  .requiredOption("--as <name>", "Utility name")
+  .option("--similar", "Include similar patterns")
+  .option("--threshold <number>", "Similarity threshold (0-1)", Number.parseFloat)
+  .option("--limit <number>", "Limit results", Number.parseInt)
+  .option("--dry-run", "Preview changes only")
+  .option("--apply", "Write changes to north/tokens/base.css")
+  .option("--json", "Output JSON")
+  .option("-q, --quiet", "Suppress output")
+  .action(async (pattern, options) => {
+    const result = await promote({
+      cwd: process.cwd(),
+      config: options.config,
+      pattern,
+      as: options.as,
+      similar: options.similar,
+      threshold: options.threshold,
+      limit: options.limit,
+      dryRun: options.dryRun,
+      apply: options.apply,
+      json: options.json,
+      quiet: options.quiet,
+    });
+
+    if (!result.success) {
+      process.exit(1);
+    }
+  });
+
+// ============================================================================
+// refactor - Refactor token values
+// ============================================================================
+
+program
+  .command("refactor")
+  .description("Refactor a design token value")
+  .argument("[token]", "Token name (use --token if it starts with --)")
+  .option("-c, --config <path>", "Path to config file")
+  .option("--token <token>", "Token name (use when token starts with --)")
+  .requiredOption("--to <value>", "New token value")
+  .option("--no-cascade", "Skip cascade analysis")
+  .option("--limit <number>", "Limit results", Number.parseInt)
+  .option("--dry-run", "Preview changes only")
+  .option("--apply", "Write changes to north/tokens/base.css")
+  .option("--json", "Output JSON")
+  .option("-q, --quiet", "Suppress output")
+  .action(async (token, options) => {
+    const result = await refactor({
+      cwd: process.cwd(),
+      config: options.config,
+      token: options.token ?? token,
+      to: options.to,
+      cascade: options.cascade,
+      limit: options.limit,
+      dryRun: options.dryRun,
+      apply: options.apply,
+      json: options.json,
+      quiet: options.quiet,
     });
 
     if (!result.success) {

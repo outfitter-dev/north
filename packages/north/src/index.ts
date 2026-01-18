@@ -118,6 +118,20 @@ export {
 } from "./commands/find.ts";
 
 export {
+  promote,
+  type PromoteOptions,
+  type PromoteResult,
+  PromoteError,
+} from "./commands/promote.ts";
+
+export {
+  refactor,
+  type RefactorOptions,
+  type RefactorResult,
+  RefactorError,
+} from "./commands/refactor.ts";
+
+export {
   runIndex,
   type IndexOptions,
   type IndexResult,
