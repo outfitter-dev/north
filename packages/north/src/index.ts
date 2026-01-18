@@ -12,6 +12,7 @@ export {
   type RulesConfig,
   type ThirdPartyConfig,
   type RegistryConfig,
+  type LintConfig,
   type RadiusDial,
   type ShadowsDial,
   type DensityDial,
@@ -100,3 +101,10 @@ export {
   type DoctorOptions,
   type DoctorResult,
 } from "./commands/doctor.ts";
+
+export {
+  check,
+  type CheckOptions,
+  type CheckResult,
+  CheckError,
+} from "./commands/check.ts";

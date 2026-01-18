@@ -163,6 +163,10 @@ rules:
     level: info
     promote-threshold: 3
 
+# Lint configuration (optional)
+# lint:
+#   classFunctions: [cn, clsx, cva]
+
 # Third-party component policy
 third-party:
   allowed:
@@ -202,5 +206,6 @@ export function applyDefaults(config: Partial<NorthConfig>): NorthConfig {
     rules: config.rules ?? DEFAULT_CONFIG.rules,
     "third-party": config["third-party"] ?? DEFAULT_CONFIG["third-party"],
     registry: config.registry,
+    lint: config.lint,
   };
 }

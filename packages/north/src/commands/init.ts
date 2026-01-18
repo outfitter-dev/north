@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import chalk from "chalk";
 import { DEFAULT_CONFIG_YAML } from "../config/defaults.ts";
 import { writeFileAtomic } from "../generation/file-writer.ts";
+import { DEFAULT_RULE_TEMPLATES } from "../lint/default-rules.ts";
 import { generateTokens } from "./gen.ts";
 
 // ============================================================================
@@ -25,6 +26,7 @@ export class InitError extends Error {
 
 const NORTH_DIR = "north";
 const TOKENS_DIR = "north/tokens";
+const RULES_DIR = "north/rules";
 const CONFIG_FILE = "north/north.config.yaml";
 const BASE_CSS_FILE = "north/tokens/base.css";
 
@@ -84,6 +86,7 @@ export async function init(options: InitOptions = {}): Promise<InitResult> {
   const cwd = options.cwd ?? process.cwd();
   const northDir = resolve(cwd, NORTH_DIR);
   const tokensDir = resolve(cwd, TOKENS_DIR);
+  const rulesDir = resolve(cwd, RULES_DIR);
   const configFile = resolve(cwd, CONFIG_FILE);
   const baseCSSFile = resolve(cwd, BASE_CSS_FILE);
 
@@ -110,8 +113,10 @@ export async function init(options: InitOptions = {}): Promise<InitResult> {
     console.log(chalk.dim("Creating directories..."));
     await mkdir(northDir, { recursive: true });
     await mkdir(tokensDir, { recursive: true });
+    await mkdir(rulesDir, { recursive: true });
     console.log(`${chalk.green("✓")} Created north/ directory`);
     console.log(`${chalk.green("✓")} Created north/tokens/ directory`);
+    console.log(`${chalk.green("✓")} Created north/rules/ directory`);
 
     // Write config file
     console.log(chalk.dim("\nWriting configuration..."));
@@ -125,6 +130,21 @@ export async function init(options: InitOptions = {}): Promise<InitResult> {
       console.log(`${chalk.green("✓")} Created ${BASE_CSS_FILE}`);
     } else {
       console.log(chalk.dim(`  Skipped ${BASE_CSS_FILE} (already exists)`));
+    }
+
+    // Write default lint rules
+    console.log(chalk.dim("\nWriting lint rules..."));
+
+    for (const template of DEFAULT_RULE_TEMPLATES) {
+      const rulePath = resolve(rulesDir, template.filename);
+      const ruleExists = await exists(rulePath);
+
+      if (!ruleExists || options.force) {
+        await writeFileAtomic(rulePath, template.content);
+        console.log(`${chalk.green("✓")} Created ${RULES_DIR}/${template.filename}`);
+      } else {
+        console.log(chalk.dim(`  Skipped ${RULES_DIR}/${template.filename} (already exists)`));
+      }
     }
 
     // Run initial generation
