@@ -9,13 +9,13 @@
 This file provides context that should survive summarization/compaction. When resuming work on this project:
 
 1. **Autonomous Execution Mode**: Complete all remaining phases (1-6) without waiting for user approval between phases
-2. **Use Graphite workflow**: After completing each phase:
+2. **Start each phase with agent dispatch**: At the beginning of each new phase, use the Skill tool to invoke `/baselayer:dispatch-agents` with the phase name (e.g., "phase 1", "phase 2"). This orchestrates the proper agent coordination.
+3. **Use Graphite workflow**: After completing each phase:
    - Commit: `gt modify -a -m "feat: phase N complete"`
    - Submit: `gt submit --no-interactive`
    - Move up: `gt up`
-3. **Follow the plan**: Reference `docs/plan/0N-*.md` for detailed phase requirements
-4. **Track progress**: Use TodoWrite to maintain task checklist
-5. **Use subagents**: Dispatch appropriate agents (senior-dev, ranger, tester) per the orchestration model
+4. **Follow the plan**: Reference `docs/plan/0N-*.md` for detailed phase requirements
+5. **Track progress**: Use TodoWrite to maintain task checklist throughout
 
 ## Phase Status
 
