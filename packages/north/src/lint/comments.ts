@@ -1,7 +1,7 @@
-import type { Deviation } from "./types.ts";
+import type { Candidate, Deviation } from "./types.ts";
 
 // ============================================================================
-// Comment Parsing for @north-deviation
+// Comment Parsing for @north-deviation and @north-candidate
 // ============================================================================
 
 /**
@@ -22,6 +22,23 @@ const DEVIATION_BLOCK_REGEX = /\/\*\s*@north-deviation\s*\n([\s\S]*?)(?:\*\/)/g;
  */
 const DEVIATION_LINE_REGEX =
   /\/\/\s*@north-deviation\s+rule=(\S+)\s+reason="([^"]+)"(?:\s+ticket=(\S+))?(?:\s+count=(\d+))?/g;
+
+/**
+ * Regex to match @north-candidate block comments.
+ * Format:
+ * /* @north-candidate
+ *  * pattern: spacing-utils
+ *  * occurrences: 5
+ *  * suggestion: Consider extracting to a reusable utility class
+ * *\/
+ */
+const CANDIDATE_BLOCK_REGEX = /\/\*\s*@north-candidate\s*\n([\s\S]*?)(?:\*\/)/g;
+
+interface CandidateField {
+  pattern?: string;
+  occurrences?: number;
+  suggestion?: string;
+}
 
 interface DeviationField {
   rule?: string;
@@ -58,6 +75,38 @@ function parseBlockFields(content: string): DeviationField {
         break;
       case "count":
         fields.count = Number.parseInt(value, 10) || 1;
+        break;
+    }
+  }
+
+  return fields;
+}
+
+function parseCandidateFields(content: string): CandidateField {
+  const fields: CandidateField = {};
+
+  // Parse YAML-like fields from block comment content
+  const lines = content.split("\n");
+  for (const line of lines) {
+    // Remove leading asterisks and whitespace
+    const cleaned = line.replace(/^\s*\*?\s*/, "").trim();
+    if (!cleaned) continue;
+
+    const colonIndex = cleaned.indexOf(":");
+    if (colonIndex === -1) continue;
+
+    const key = cleaned.slice(0, colonIndex).trim().toLowerCase();
+    const value = cleaned.slice(colonIndex + 1).trim();
+
+    switch (key) {
+      case "pattern":
+        fields.pattern = value;
+        break;
+      case "occurrences":
+        fields.occurrences = Number.parseInt(value, 10) || 0;
+        break;
+      case "suggestion":
+        fields.suggestion = value;
         break;
     }
   }
@@ -111,6 +160,30 @@ export function parseDeviations(source: string, filePath: string): Deviation[] {
   }
 
   return deviations;
+}
+
+/**
+ * Parse @north-candidate comments from source code.
+ * Candidates represent patterns that could be promoted to reusable utilities.
+ */
+export function parseCandidates(source: string, filePath: string): Candidate[] {
+  const candidates: Candidate[] = [];
+
+  for (const match of source.matchAll(CANDIDATE_BLOCK_REGEX)) {
+    const fields = parseCandidateFields(match[1] ?? "");
+    if (fields.pattern && fields.suggestion) {
+      const line = getLineNumber(source, match.index ?? 0);
+      candidates.push({
+        pattern: fields.pattern,
+        occurrences: fields.occurrences ?? 0,
+        suggestion: fields.suggestion,
+        filePath,
+        line,
+      });
+    }
+  }
+
+  return candidates;
 }
 
 /**

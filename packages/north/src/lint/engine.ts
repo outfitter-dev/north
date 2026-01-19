@@ -4,11 +4,12 @@ import { glob } from "glob";
 import { minimatch } from "minimatch";
 import { findConfigFile, loadConfig } from "../config/loader.ts";
 import type { NorthConfig } from "../config/schema.ts";
-import { isIssueCoveredByDeviation, parseDeviations } from "./comments.ts";
+import { isIssueCoveredByDeviation, parseCandidates, parseDeviations } from "./comments.ts";
 import { extractClassTokens } from "./extract.ts";
 import { getIgnorePatterns } from "./ignores.ts";
 import { loadRules } from "./rules.ts";
 import type {
+  Candidate,
   ClassToken,
   Deviation,
   ExtractionResult,
@@ -297,6 +298,7 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
   const extractionResults: ExtractionResult[] = [];
   const rawIssues: LintIssue[] = [];
   const allDeviations: Deviation[] = [];
+  const allCandidates: Candidate[] = [];
 
   for (const file of files) {
     const displayPath = relative(cwd, file) || file;
@@ -311,6 +313,10 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
       // Parse deviations from this file
       const fileDeviations = parseDeviations(source, displayPath);
       allDeviations.push(...fileDeviations);
+
+      // Parse candidates from this file
+      const fileCandidates = parseCandidates(source, displayPath);
+      allCandidates.push(...fileCandidates);
 
       if (options.collectIssues !== false) {
         for (const token of extraction.tokens) {
@@ -354,6 +360,7 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
       stats,
       rules,
       deviations: allDeviations,
+      candidates: allCandidates,
     },
     configPath,
   };

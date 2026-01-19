@@ -15,6 +15,14 @@ export interface Deviation {
   filePath: string;
 }
 
+export interface Candidate {
+  pattern: string;
+  occurrences: number;
+  suggestion: string;
+  filePath: string;
+  line: number;
+}
+
 export interface LoadedRule {
   id: string;
   key: string;
@@ -60,6 +68,7 @@ export interface LintReport {
   stats: LintStats;
   rules: LoadedRule[];
   deviations: Deviation[];
+  candidates: Candidate[];
 }
 
 export interface ClassToken {
