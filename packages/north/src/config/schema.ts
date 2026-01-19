@@ -175,6 +175,18 @@ export const RegistryConfigSchema = z
 export type RegistryConfig = z.infer<typeof RegistryConfigSchema>;
 
 // ============================================================================
+// Lint Configuration
+// ============================================================================
+
+export const LintConfigSchema = z
+  .object({
+    classFunctions: z.array(z.string()).min(1).optional(),
+  })
+  .optional();
+
+export type LintConfig = z.infer<typeof LintConfigSchema>;
+
+// ============================================================================
 // Main North Configuration
 // ============================================================================
 
@@ -187,6 +199,7 @@ export const NorthConfigSchema = z.object({
   rules: RulesConfigSchema.optional(),
   "third-party": ThirdPartyConfigSchema.optional(),
   registry: RegistryConfigSchema.optional(),
+  lint: LintConfigSchema,
 });
 
 export type NorthConfig = z.infer<typeof NorthConfigSchema>;

@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import chalk from "chalk";
 import { findConfigFile, loadConfig } from "../config/loader.ts";
 import { verifyChecksum } from "../generation/css-generator.ts";
+import { runLint } from "../lint/engine.ts";
 
 // ============================================================================
 // Doctor Command
@@ -10,6 +11,7 @@ import { verifyChecksum } from "../generation/css-generator.ts";
 
 export interface DoctorOptions {
   cwd?: string;
+  lint?: boolean;
 }
 
 export interface DoctorResult {
@@ -197,6 +199,47 @@ export async function doctor(options: DoctorOptions = {}): Promise<DoctorResult>
       message: "north/tokens/base.css exists",
     });
     console.log(`${chalk.green("✓")} Base tokens exist`);
+  }
+
+  // ========================================================================
+  // Check 6: Lint rules & extraction coverage (optional)
+  // ========================================================================
+
+  if (options.lint) {
+    console.log(chalk.dim("\nChecking lint rules and extraction coverage..."));
+
+    try {
+      const { report } = await runLint({
+        cwd,
+        collectIssues: false,
+      });
+
+      checks.push({
+        name: "Lint rules",
+        passed: report.rules.length > 0,
+        message: `Loaded ${report.rules.length} rules`,
+      });
+
+      const coverageMessage = `Extracted classes from ${report.stats.filesWithClasses}/${report.stats.totalFiles} files (${report.stats.coveragePercent}%). Non-literal sites: ${report.stats.filesWithNonLiteral}.`;
+
+      checks.push({
+        name: "Lint coverage",
+        passed: true,
+        message: coverageMessage,
+      });
+
+      console.log(`${chalk.green("✓")} Loaded ${report.rules.length} rules`);
+      console.log(chalk.dim(`  ${coverageMessage}`));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      checks.push({
+        name: "Lint diagnostics",
+        passed: false,
+        message: errorMessage,
+      });
+      console.log(`${chalk.red("✗")} Lint diagnostics failed`);
+      console.log(chalk.dim(`  ${errorMessage}`));
+    }
   }
 
   // ========================================================================
