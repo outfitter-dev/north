@@ -123,12 +123,14 @@ program
   .option("-c, --config <path>", "Path to config file")
   .option("--json", "Output JSON report")
   .option("--staged", "Only lint staged files")
+  .option("--strict", "Treat warnings as errors")
   .action(async (options) => {
     const result = await check({
       cwd: process.cwd(),
       config: options.config,
       json: options.json,
       staged: options.staged,
+      strict: options.strict,
     });
 
     if (!result.success) {

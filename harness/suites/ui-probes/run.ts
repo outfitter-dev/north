@@ -109,108 +109,108 @@ export async function runUiProbes(options: UiProbeRunOptions = {}) {
           await page.goto(`${baseUrl}${route.path}`, { waitUntil: "networkidle" });
 
           const metrics = await page.evaluate(() => {
-          const overflow =
-            Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) >
-            window.innerWidth + 1;
+            const overflow =
+              Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) >
+              window.innerWidth + 1;
 
-          const interactive = Array.from(
-            document.querySelectorAll("a, button, [role='button'], input, select, textarea")
-          ).filter((element) => {
-            const rect = element.getBoundingClientRect();
-            return rect.width > 0 && rect.height > 0;
-          });
-
-          const smallTargets = interactive
-            .map((element) => {
+            const interactive = Array.from(
+              document.querySelectorAll("a, button, [role='button'], input, select, textarea")
+            ).filter((element) => {
               const rect = element.getBoundingClientRect();
+              return rect.width > 0 && rect.height > 0;
+            });
+
+            const smallTargets = interactive
+              .map((element) => {
+                const rect = element.getBoundingClientRect();
+                return {
+                  width: rect.width,
+                  height: rect.height,
+                  text: element.textContent?.trim().slice(0, 48) ?? "",
+                  tag: element.tagName.toLowerCase(),
+                };
+              })
+              .filter((item) => item.width < 44 || item.height < 44);
+
+            function parseRgb(value: string) {
+              const match = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+              if (!match) return null;
               return {
-                width: rect.width,
-                height: rect.height,
-                text: element.textContent?.trim().slice(0, 48) ?? "",
-                tag: element.tagName.toLowerCase(),
+                r: Number(match[1]),
+                g: Number(match[2]),
+                b: Number(match[3]),
+                a: match[4] ? Number(match[4]) : 1,
               };
-            })
-            .filter((item) => item.width < 44 || item.height < 44);
+            }
 
-          function parseRgb(value: string) {
-            const match = value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
-            if (!match) return null;
-            return {
-              r: Number(match[1]),
-              g: Number(match[2]),
-              b: Number(match[3]),
-              a: match[4] ? Number(match[4]) : 1,
-            };
-          }
-
-          function luminance(color: { r: number; g: number; b: number }) {
-            const toLinear = (channel: number) => {
-              const c = channel / 255;
-              return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-            };
-            return (
-              0.2126 * toLinear(color.r) + 0.7152 * toLinear(color.g) + 0.0722 * toLinear(color.b)
-            );
-          }
-
-          function contrastRatio(
-            fg: { r: number; g: number; b: number },
-            bg: { r: number; g: number; b: number }
-          ) {
-            const l1 = luminance(fg) + 0.05;
-            const l2 = luminance(bg) + 0.05;
-            return l1 > l2 ? l1 / l2 : l2 / l1;
-          }
-
-          const background = parseRgb(getComputedStyle(document.body).backgroundColor) ?? {
-            r: 255,
-            g: 255,
-            b: 255,
-            a: 1,
-          };
-
-          const textNodes = Array.from(
-            document.querySelectorAll("p, span, a, button, h1, h2, h3, h4, h5, h6")
-          )
-            .filter((element) => element.textContent && element.textContent.trim().length > 0)
-            .slice(0, 120);
-
-          const lowContrast = textNodes
-            .map((element) => {
-              const style = getComputedStyle(element);
-              const fg = parseRgb(style.color);
-              const bg = parseRgb(style.backgroundColor);
-              if (!fg) return null;
-              const bgColor = bg && bg.a !== 0 ? bg : background;
-              const ratio = contrastRatio(
-                { r: fg.r, g: fg.g, b: fg.b },
-                { r: bgColor.r, g: bgColor.g, b: bgColor.b }
+            function luminance(color: { r: number; g: number; b: number }) {
+              const toLinear = (channel: number) => {
+                const c = channel / 255;
+                return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+              };
+              return (
+                0.2126 * toLinear(color.r) + 0.7152 * toLinear(color.g) + 0.0722 * toLinear(color.b)
               );
-              return {
-                ratio,
-                text: element.textContent?.trim().slice(0, 48) ?? "",
-                tag: element.tagName.toLowerCase(),
-              };
-            })
-            .filter(
-              (entry): entry is { ratio: number; text: string; tag: string } => entry !== null
-            )
-            .filter((entry) => entry.ratio < 3);
+            }
 
-          return {
-            overflow,
-            touchTargets: {
-              total: interactive.length,
-              tooSmall: smallTargets.length,
-              samples: smallTargets.slice(0, 5),
-            },
-            contrast: {
-              total: textNodes.length,
-              low: lowContrast.length,
-              samples: lowContrast.slice(0, 5),
-            },
-          };
-        });
+            function contrastRatio(
+              fg: { r: number; g: number; b: number },
+              bg: { r: number; g: number; b: number }
+            ) {
+              const l1 = luminance(fg) + 0.05;
+              const l2 = luminance(bg) + 0.05;
+              return l1 > l2 ? l1 / l2 : l2 / l1;
+            }
+
+            const background = parseRgb(getComputedStyle(document.body).backgroundColor) ?? {
+              r: 255,
+              g: 255,
+              b: 255,
+              a: 1,
+            };
+
+            const textNodes = Array.from(
+              document.querySelectorAll("p, span, a, button, h1, h2, h3, h4, h5, h6")
+            )
+              .filter((element) => element.textContent && element.textContent.trim().length > 0)
+              .slice(0, 120);
+
+            const lowContrast = textNodes
+              .map((element) => {
+                const style = getComputedStyle(element);
+                const fg = parseRgb(style.color);
+                const bg = parseRgb(style.backgroundColor);
+                if (!fg) return null;
+                const bgColor = bg && bg.a !== 0 ? bg : background;
+                const ratio = contrastRatio(
+                  { r: fg.r, g: fg.g, b: fg.b },
+                  { r: bgColor.r, g: bgColor.g, b: bgColor.b }
+                );
+                return {
+                  ratio,
+                  text: element.textContent?.trim().slice(0, 48) ?? "",
+                  tag: element.tagName.toLowerCase(),
+                };
+              })
+              .filter(
+                (entry): entry is { ratio: number; text: string; tag: string } => entry !== null
+              )
+              .filter((entry) => entry.ratio < 3);
+
+            return {
+              overflow,
+              touchTargets: {
+                total: interactive.length,
+                tooSmall: smallTargets.length,
+                samples: smallTargets.slice(0, 5),
+              },
+              contrast: {
+                total: textNodes.length,
+                low: lowContrast.length,
+                samples: lowContrast.slice(0, 5),
+              },
+            };
+          });
 
           const screenshotPath = resolve(
             scenarioDir,

@@ -27,6 +27,7 @@ export interface CheckOptions {
   config?: string;
   json?: boolean;
   staged?: boolean;
+  strict?: boolean;
 }
 
 export interface CheckResult {
@@ -92,7 +93,8 @@ export async function check(options: CheckOptions = {}): Promise<CheckResult> {
       console.log(formatLintReport(report));
     }
 
-    const hasErrors = report.summary.errors > 0;
+    const strict = options.strict ?? false;
+    const hasErrors = report.summary.errors > 0 || (strict && report.summary.warnings > 0);
 
     return {
       success: !hasErrors,

@@ -1,6 +1,7 @@
 import { runCorpusSuite } from "./suites/corpus/run.ts";
 import { runFuzzSuite } from "./suites/fuzz/run.ts";
 import { runMutationSuite } from "./suites/mutations/run.ts";
+import { runPromoteSuite } from "./suites/promote/run.ts";
 import { runUiProbes } from "./suites/ui-probes/run.ts";
 
 function parseFlag(args: string[], name: string): string | undefined {
@@ -101,6 +102,25 @@ async function main() {
     return;
   }
 
+  if (command === "promote") {
+    const scenario = parseFlag(args, "--scenario");
+    const results = await runPromoteSuite({ scenario });
+    const failures = results.filter((result) => !result.ok);
+
+    for (const result of results) {
+      const status = result.ok ? "ok" : "fail";
+      console.log(`${status} ${result.id}`);
+      for (const error of result.errors) {
+        console.log(`  - ${error}`);
+      }
+    }
+
+    if (failures.length > 0) {
+      process.exitCode = 1;
+    }
+    return;
+  }
+
   console.error(`Unknown command: ${command}`);
   printHelp();
   process.exitCode = 1;
@@ -108,7 +128,7 @@ async function main() {
 
 function printHelp() {
   console.log(
-    "Stress Harness\n\nUsage:\n  bun run harness mutations [--suite name]\n  bun run harness fuzz [--limit n]\n  bun run harness corpus [--repo name]\n  bun run harness ui-probes [--route name]\n"
+    "Stress Harness\n\nUsage:\n  bun run harness mutations [--suite name]\n  bun run harness fuzz [--limit n]\n  bun run harness corpus [--repo name]\n  bun run harness ui-probes [--route name]\n  bun run harness promote [--scenario id]\n"
   );
 }
 
