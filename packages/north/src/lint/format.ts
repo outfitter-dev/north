@@ -77,7 +77,9 @@ function formatDeviationHistogram(groups: DeviationGroup[]): string[] {
   for (const group of groups.slice(0, 10)) {
     const barLength = Math.ceil((group.count / maxCount) * barWidth);
     const bar = chalk.magenta("#".repeat(barLength).padEnd(barWidth));
-    lines.push(`  ${chalk.yellow(group.count.toString().padStart(3))} ${bar} ${chalk.cyan(group.rule)}`);
+    lines.push(
+      `  ${chalk.yellow(group.count.toString().padStart(3))} ${bar} ${chalk.cyan(group.rule)}`
+    );
     lines.push(chalk.dim(`      ${group.reason}`));
   }
 
