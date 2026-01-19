@@ -23,6 +23,13 @@ export interface Candidate {
   line: number;
 }
 
+export interface DeviationGroup {
+  rule: string;
+  reason: string;
+  count: number;
+  locations: Array<{ filePath: string; line: number }>;
+}
+
 export interface LoadedRule {
   id: string;
   key: string;
@@ -69,6 +76,7 @@ export interface LintReport {
   rules: LoadedRule[];
   deviations: Deviation[];
   candidates: Candidate[];
+  deviationGroups: DeviationGroup[];
 }
 
 export interface ClassToken {

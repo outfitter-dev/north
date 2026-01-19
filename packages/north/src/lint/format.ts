@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import type { Candidate, LintIssue, LintReport } from "./types.ts";
+import type { Candidate, DeviationGroup, LintIssue, LintReport } from "./types.ts";
 
 function formatLocation(issue: LintIssue): string {
   return `${issue.filePath}:${issue.line}:${issue.column}`;
@@ -62,6 +62,34 @@ function formatCandidates(candidates: Candidate[]): string[] {
   return lines;
 }
 
+function formatDeviationHistogram(groups: DeviationGroup[]): string[] {
+  if (groups.length === 0) {
+    return [];
+  }
+
+  const lines: string[] = [];
+  lines.push(chalk.bold.magenta(`Deviation breakdown (${groups.length} patterns):`));
+  lines.push("");
+
+  const maxCount = Math.max(...groups.map((g) => g.count));
+  const barWidth = 20;
+
+  for (const group of groups.slice(0, 10)) {
+    const barLength = Math.ceil((group.count / maxCount) * barWidth);
+    const bar = chalk.magenta("#".repeat(barLength).padEnd(barWidth));
+    lines.push(`  ${chalk.yellow(group.count.toString().padStart(3))} ${bar} ${chalk.cyan(group.rule)}`);
+    lines.push(chalk.dim(`      ${group.reason}`));
+  }
+
+  if (groups.length > 10) {
+    lines.push(chalk.dim(`  ... and ${groups.length - 10} more patterns`));
+  }
+
+  lines.push("");
+
+  return lines;
+}
+
 export function formatLintReport(report: LintReport): string {
   const lines: string[] = [];
   const { errors, warnings, info } = report.summary;
@@ -82,6 +110,11 @@ export function formatLintReport(report: LintReport): string {
     } else {
       lines.push(successMessage);
     }
+    // Show deviation histogram when no issues
+    if (report.deviationGroups.length > 0) {
+      lines.push("");
+      lines.push(...formatDeviationHistogram(report.deviationGroups));
+    }
     // Still show candidates even when no issues
     if (candidateCount > 0) {
       lines.push("");
@@ -101,6 +134,11 @@ export function formatLintReport(report: LintReport): string {
     lines.push(formatIssueLine(issue));
     lines.push(...formatIssueDetail(issue));
     lines.push("");
+  }
+
+  // Add deviation histogram if there are grouped deviations
+  if (report.deviationGroups.length > 0) {
+    lines.push(...formatDeviationHistogram(report.deviationGroups));
   }
 
   // Add candidates section if any exist
