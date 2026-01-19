@@ -43,6 +43,15 @@ bun run harness:bump-sha --tag opt-in
 bun run harness:bump-sha --repo my-app --ref main
 ```
 
+### Explore sessions
+
+Explore sessions set up a repo workspace and drop a `northx` wrapper that logs every command into `.harness/sessions/<session>/<repo>/`.
+
+```bash
+bun run harness:explore --repo shadcn-ui --mode shell --session baseline
+./northx check --json --config ./north/north.config.yaml
+```
+
 ## Mutation suite
 
 Mutations clone a pinned golden repo, apply a base patch + mutation patch, and run `north check --json --staged`. Results are compared against `expect.json`.
