@@ -239,6 +239,12 @@ function mergeConfigs(
 
     // Lint: child overrides
     lint: child.lint ?? parent.lint,
+
+    // Index: child overrides
+    index: {
+      ...(parent.index ?? {}),
+      ...(child.index ?? {}),
+    },
   };
 }
 
