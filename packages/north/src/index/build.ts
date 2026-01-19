@@ -7,6 +7,8 @@ import type { ClassSite } from "../lint/types.ts";
 import { parseCssTokens } from "./css.ts";
 import type { IndexDatabase } from "./db.ts";
 import { openIndexDatabase } from "./db.ts";
+import type { ComponentGraphEntry } from "./extract-components.ts";
+import { extractComponentGraph } from "./extract-components.ts";
 import { SCHEMA_VERSION, createIndexSchema } from "./schema.ts";
 import { collectSourceFiles, computeSourceHash, resolveIndexPath } from "./sources.ts";
 import type { IndexBuildResult, IndexStats, TokenRecord, UsageRecord } from "./types.ts";
@@ -263,6 +265,7 @@ export async function buildIndex(options: BuildIndexOptions = {}): Promise<Index
   const tokenGraphEntries = buildTokenGraph(dependencies);
   const usages: UsageRecord[] = [];
   const classSites: ClassSite[] = [];
+  const componentGraphEntries: ComponentGraphEntry[] = [];
   const tokenNames = new Set(tokensByName.keys());
 
   for (const tsxFile of tsxFiles) {
@@ -285,6 +288,10 @@ export async function buildIndex(options: BuildIndexOptions = {}): Promise<Index
         component: null,
       });
     }
+
+    // Extract component composition relationships
+    const componentGraph = extractComponentGraph(content, relativePath);
+    componentGraphEntries.push(...componentGraph);
   }
 
   const patterns = buildPatterns(classSites);
@@ -312,6 +319,7 @@ export async function buildIndex(options: BuildIndexOptions = {}): Promise<Index
     usageCount: sortedUsages.length,
     patternCount: patterns.length,
     tokenGraphCount: tokenGraphEntries.length,
+    componentGraphCount: componentGraphEntries.length,
     classSiteCount: classSites.length,
   };
 
@@ -326,6 +334,9 @@ export async function buildIndex(options: BuildIndexOptions = {}): Promise<Index
   );
   const insertTokenGraph = db.prepare(
     "INSERT INTO token_graph (ancestor, descendant, depth, path) VALUES (?, ?, ?, ?)"
+  );
+  const insertComponentGraph = db.prepare(
+    "INSERT INTO component_graph (parent_file, parent_component, child_file, child_component, line) VALUES (?, ?, ?, ?, ?)"
   );
   const insertMeta = db.prepare("INSERT INTO meta (key, value) VALUES (?, ?)");
 
@@ -368,6 +379,26 @@ export async function buildIndex(options: BuildIndexOptions = {}): Promise<Index
         entry.descendant,
         entry.depth,
         JSON.stringify(entry.path)
+      );
+    }
+
+    // Deduplicate component graph entries (keep first occurrence by line number)
+    const uniqueComponentGraph = new Map<string, ComponentGraphEntry>();
+    for (const entry of componentGraphEntries) {
+      const key = `${entry.parentFile}:${entry.parentComponent}:${entry.childFile}:${entry.childComponent}`;
+      const existing = uniqueComponentGraph.get(key);
+      if (!existing || entry.line < existing.line) {
+        uniqueComponentGraph.set(key, entry);
+      }
+    }
+
+    for (const entry of uniqueComponentGraph.values()) {
+      insertComponentGraph.run(
+        entry.parentFile,
+        entry.parentComponent,
+        entry.childFile,
+        entry.childComponent,
+        entry.line
       );
     }
 
