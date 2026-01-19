@@ -109,26 +109,38 @@ export type ColorsConfig = z.infer<typeof ColorsConfigSchema>;
 export const RuleLevelSchema = z.enum(["error", "warn", "info", "off"]);
 export type RuleLevel = z.infer<typeof RuleLevelSchema>;
 
+/** Base rule config with optional level and per-rule file ignores */
+export const BaseRuleConfigSchema = z.object({
+  level: RuleLevelSchema.optional(),
+  ignore: z.array(z.string()).optional(),
+});
+
+/** Rule config that accepts either a level string or an object with level and ignore */
+export const SimpleRuleConfigSchema = z.union([RuleLevelSchema, BaseRuleConfigSchema]);
+
 export const RulesConfigSchema = z
   .object({
-    "no-raw-palette": RuleLevelSchema.optional(),
-    "no-arbitrary-colors": RuleLevelSchema.optional(),
-    "no-arbitrary-values": RuleLevelSchema.optional(),
+    "no-raw-palette": SimpleRuleConfigSchema.optional(),
+    "no-arbitrary-colors": SimpleRuleConfigSchema.optional(),
+    "no-arbitrary-values": SimpleRuleConfigSchema.optional(),
     "repeated-spacing-pattern": z
       .object({
         level: RuleLevelSchema.optional(),
+        ignore: z.array(z.string()).optional(),
         threshold: z.number().int().min(1).optional(),
       })
       .optional(),
     "component-complexity": z
       .object({
         level: RuleLevelSchema.optional(),
+        ignore: z.array(z.string()).optional(),
         "max-classes": z.number().int().min(1).optional(),
       })
       .optional(),
     "deviation-tracking": z
       .object({
         level: RuleLevelSchema.optional(),
+        ignore: z.array(z.string()).optional(),
         "promote-threshold": z.number().int().min(1).optional(),
       })
       .optional(),

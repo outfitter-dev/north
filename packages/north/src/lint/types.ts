@@ -10,6 +10,7 @@ export interface LoadedRule {
   note?: string;
   regex?: RegExp;
   sourcePath: string;
+  ignore?: string[];
 }
 
 export interface LintIssue {
