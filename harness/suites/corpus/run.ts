@@ -266,7 +266,9 @@ async function runNorthCheck(
   const baseCommand = failureIndex >= 0 ? commands[failureIndex] : commands[0];
   const command = { ...baseCommand, durationMs: duration };
   if (failureIndex >= 0 && paths?.[failureIndex]) {
-    command.stderr = [baseCommand.stderr, `Path: ${paths[failureIndex]}`].filter(Boolean).join("\n");
+    command.stderr = [baseCommand.stderr, `Path: ${paths[failureIndex]}`]
+      .filter(Boolean)
+      .join("\n");
   }
 
   return { report: merged, durationMs: duration, command };
