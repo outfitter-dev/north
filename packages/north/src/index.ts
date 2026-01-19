@@ -12,6 +12,7 @@ export {
   type RulesConfig,
   type ThirdPartyConfig,
   type RegistryConfig,
+  type CompatibilityConfig,
   type LintConfig,
   type IndexConfig,
   type RadiusDial,
@@ -102,6 +103,13 @@ export {
   type DoctorOptions,
   type DoctorResult,
 } from "./commands/doctor.ts";
+
+export {
+  context,
+  type ContextOptions,
+  type ContextResult,
+  ContextError,
+} from "./commands/context.ts";
 
 export {
   check,

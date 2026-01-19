@@ -57,6 +57,7 @@ export const DEFAULT_COLORS_LIGHT = {
 
 export const DEFAULT_CONFIG: NorthConfig = {
   extends: null,
+  compatibility: undefined,
   dials: {
     radius: DEFAULT_RADIUS,
     shadows: DEFAULT_SHADOWS,
@@ -189,6 +190,11 @@ third-party:
       reason: "Charts use --chart-* tokens"
     - package: "cmdk"
       reason: "Command palette primitive"
+
+# Compatibility tracking (optional)
+# compatibility:
+#   shadcn: "2.1.0"
+#   tailwind: "4.0.0"
 `;
 
 /**
@@ -221,6 +227,7 @@ export function applyDefaults(config: Partial<NorthConfig>): NorthConfig {
     rules: config.rules ?? DEFAULT_CONFIG.rules,
     "third-party": config["third-party"] ?? DEFAULT_CONFIG["third-party"],
     registry: config.registry,
+    compatibility: config.compatibility ?? DEFAULT_CONFIG.compatibility,
     lint: config.lint,
   };
 }

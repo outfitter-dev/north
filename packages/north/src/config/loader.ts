@@ -237,6 +237,9 @@ function mergeConfigs(
     // Registry: child overrides
     registry: child.registry ?? parent.registry,
 
+    // Compatibility: child overrides
+    compatibility: child.compatibility ?? parent.compatibility,
+
     // Lint: child overrides
     lint: child.lint ?? parent.lint,
 

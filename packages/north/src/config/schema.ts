@@ -175,6 +175,19 @@ export const RegistryConfigSchema = z
 export type RegistryConfig = z.infer<typeof RegistryConfigSchema>;
 
 // ============================================================================
+// Compatibility Configuration
+// ============================================================================
+
+export const CompatibilityConfigSchema = z
+  .object({
+    shadcn: z.string().optional(),
+    tailwind: z.string().optional(),
+  })
+  .optional();
+
+export type CompatibilityConfig = z.infer<typeof CompatibilityConfigSchema>;
+
+// ============================================================================
 // Lint Configuration
 // ============================================================================
 
@@ -212,8 +225,9 @@ export const NorthConfigSchema = z.object({
   rules: RulesConfigSchema.optional(),
   "third-party": ThirdPartyConfigSchema.optional(),
   registry: RegistryConfigSchema.optional(),
-  lint: LintConfigSchema,
-  index: IndexConfigSchema,
+  compatibility: CompatibilityConfigSchema.optional(),
+  lint: LintConfigSchema.optional(),
+  index: IndexConfigSchema.optional(),
 });
 
 export type NorthConfig = z.infer<typeof NorthConfigSchema>;
