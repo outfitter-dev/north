@@ -1,0 +1,53 @@
+{
+  "repos": [
+    {
+      "name": "north",
+      "url": "https://github.com/outfitter-dev/north.git",
+      "sha": "66136affbf5faa09df93e6eeb65c497059818a64",
+      "type": "next",
+      "tags": ["core", "next", "shadcn", "tailwind", "ci"]
+    },
+    {
+      "name": "navigator",
+      "url": "https://github.com/outfitter-dev/navigator.git",
+      "sha": "616cabd807823a19c6e054e55b697da38f4a7bfe",
+      "type": "vite",
+      "tags": ["core", "vite", "ci"]
+    },
+    {
+      "name": "agent-browser",
+      "url": "https://github.com/outfitter-dev/agent-browser.git",
+      "sha": "6abee3764105ca823f4688bb799279e447671f55",
+      "type": "vite",
+      "tags": ["core", "vite", "ci"]
+    },
+    {
+      "name": "shadcn-ui",
+      "url": "https://github.com/shadcn-ui/ui.git",
+      "sha": "d04bc84a51335d1ec4043e8dfcff874235c2a840",
+      "type": "next",
+      "tags": ["opt-in", "shadcn", "tailwind", "components", "monorepo"]
+    },
+    {
+      "name": "ai-chatbot",
+      "url": "https://github.com/vercel/ai-chatbot.git",
+      "sha": "9d5d8a3ea7968522a37ab1cc145a6c0ef8a9dd2e",
+      "type": "next",
+      "tags": ["opt-in", "shadcn", "tailwind", "app"]
+    },
+    {
+      "name": "shadcn-admin",
+      "url": "https://github.com/satnaing/shadcn-admin.git",
+      "sha": "d86ee05a0667ad5b72b8119affa2a0b11cc27fad",
+      "type": "vite",
+      "tags": ["opt-in", "shadcn", "tailwind", "app"]
+    },
+    {
+      "name": "tanstack-start-dashboard",
+      "url": "https://github.com/Kiranism/tanstack-start-dashboard.git",
+      "sha": "5a2bc5e283b6553eceb200204e96596f8195d099",
+      "type": "tanstack-start",
+      "tags": ["opt-in", "shadcn", "tailwind", "app", "tanstack"]
+    }
+  ]
+}

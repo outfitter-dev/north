@@ -13,16 +13,11 @@ import {
 import { checkoutRef, cloneRepo } from "../../utils/git.ts";
 import { runNorth } from "../../utils/north.ts";
 import { harnessPath } from "../../utils/paths.ts";
-
-interface PromoteRepo {
-  name: string;
-  url: string;
-  sha: string;
-}
+import { readRepoRegistry, resolveRepo } from "../../utils/repos.ts";
 
 interface PromoteScenario {
   id: string;
-  repo: PromoteRepo;
+  repo: string;
   pattern: string;
   as: string;
   instances: number;
@@ -48,6 +43,7 @@ const TOKEN_NEXT = "oklch(0.7 0 0)";
 
 export async function runPromoteSuite(options: PromoteRunOptions = {}) {
   const config = await readJson<PromoteConfig>(harnessPath("suites", "promote", "scenarios.json"));
+  const registry = await readRepoRegistry();
   const scenarios = options.scenario
     ? config.scenarios.filter((scenario) => scenario.id === options.scenario)
     : config.scenarios;
@@ -61,17 +57,18 @@ export async function runPromoteSuite(options: PromoteRunOptions = {}) {
   const results: PromoteResult[] = [];
 
   for (const scenario of scenarios) {
+    const resolvedRepo = resolveRepo(registry, scenario.repo);
     const workDir = harnessPath(".cache", "promote", scenario.id);
     const artifactDir = harnessPath("artifacts", "promote", scenario.id);
     await emptyDir(workDir);
 
-    const cloneResult = await cloneRepo(scenario.repo.url, workDir);
+    const cloneResult = await cloneRepo(resolvedRepo.url, workDir);
     if (cloneResult.code !== 0) {
       results.push({ id: scenario.id, ok: false, errors: ["git clone failed"] });
       continue;
     }
 
-    const checkoutResult = await checkoutRef(workDir, scenario.repo.sha);
+    const checkoutResult = await checkoutRef(workDir, resolvedRepo.sha);
     if (checkoutResult.code !== 0) {
       results.push({ id: scenario.id, ok: false, errors: ["git checkout failed"] });
       continue;
@@ -132,10 +129,7 @@ export async function runPromoteSuite(options: PromoteRunOptions = {}) {
       ],
       workDir
     );
-    await writeJson(
-      resolve(artifactDir, "promote-dry-run.json"),
-      parseJsonSafe(promoteDry.stdout)
-    );
+    await writeJson(resolve(artifactDir, "promote-dry-run.json"), parseJsonSafe(promoteDry.stdout));
     if (promoteDry.code !== 0) {
       errors.push("north promote --dry-run failed");
     }
@@ -154,10 +148,7 @@ export async function runPromoteSuite(options: PromoteRunOptions = {}) {
       ],
       workDir
     );
-    await writeJson(
-      resolve(artifactDir, "promote-apply.json"),
-      parseJsonSafe(promoteApply.stdout)
-    );
+    await writeJson(resolve(artifactDir, "promote-apply.json"), parseJsonSafe(promoteApply.stdout));
     if (promoteApply.code !== 0) {
       errors.push("north promote --apply failed");
     }
