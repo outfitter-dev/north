@@ -364,3 +364,93 @@ export function extractClassTokens(
     classSites,
   };
 }
+
+// ============================================================================
+// Component Definition Extraction
+// ============================================================================
+
+export interface ComponentDefinition {
+  name: string;
+  filePath: string;
+  line: number;
+  column: number;
+  hasNorthRoleComment: boolean;
+  isExported: boolean;
+}
+
+/**
+ * Extract exported component definitions from source code.
+ * Checks for @north-role JSDoc annotations in preceding comments.
+ */
+export function extractComponentDefinitions(
+  source: string,
+  filePath: string
+): ComponentDefinition[] {
+  const root = parse(Lang.Tsx, source);
+  const definitions: ComponentDefinition[] = [];
+
+  // Find export statements with function declarations
+  const exportStatements = root.root().findAll({ rule: { kind: "export_statement" } });
+
+  for (const exportNode of exportStatements) {
+    const range = exportNode.range();
+    const startIndex = range.start.index;
+
+    // Look for @north-role in the immediately preceding JSDoc block.
+    // Find the previous statement boundary to avoid matching a prior component's comment.
+    const precedingText = source.slice(0, startIndex);
+
+    // Find last statement boundary (export, function, class, closing brace/semicolon)
+    const boundaryMatch = precedingText.match(
+      /(?:export\s|function\s|class\s|[};])(?![\s\S]*(?:export\s|function\s|class\s|[};]))/
+    );
+    const searchStart = boundaryMatch ? (boundaryMatch.index ?? 0) + boundaryMatch[0].length : 0;
+    const commentRegion = precedingText.slice(searchStart);
+    const jsDocMatch = commentRegion.match(/\/\*\*[\s\S]*?\*\/\s*$/);
+    const hasNorthRoleComment = jsDocMatch ? /@north-role/.test(jsDocMatch[0]) : false;
+
+    // Find the component name from function declaration or variable declaration
+    const funcDecl = exportNode.find({ rule: { kind: "function_declaration" } });
+    const varDecl = exportNode.find({ rule: { kind: "lexical_declaration" } });
+
+    if (funcDecl) {
+      const identifier = funcDecl.find({ rule: { kind: "identifier" } });
+      const componentName = identifier?.text() ?? null;
+
+      if (componentName && /^[A-Z]/.test(componentName)) {
+        definitions.push({
+          name: componentName,
+          filePath,
+          line: range.start.line + 1,
+          column: range.start.column + 1,
+          hasNorthRoleComment,
+          isExported: true,
+        });
+      }
+    } else if (varDecl) {
+      // Handle multi-declaration exports: export const A = () => {}, B = () => {}
+      const variableDeclaration =
+        varDecl.find({ rule: { kind: "variable_declaration" } }) ?? varDecl;
+      const declarators = variableDeclaration.findAll({ rule: { kind: "variable_declarator" } });
+
+      for (const declarator of declarators) {
+        const identifier = declarator.find({ rule: { kind: "identifier" } });
+        const componentName = identifier?.text() ?? null;
+
+        if (componentName && /^[A-Z]/.test(componentName)) {
+          const declRange = declarator.range();
+          definitions.push({
+            name: componentName,
+            filePath,
+            line: declRange.start.line + 1,
+            column: declRange.start.column + 1,
+            hasNorthRoleComment,
+            isExported: true,
+          });
+        }
+      }
+    }
+  }
+
+  return definitions;
+}

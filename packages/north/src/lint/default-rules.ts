@@ -112,4 +112,24 @@ note: |
   - Creating semantic wrapper components
 `,
   },
+  {
+    filename: "missing-semantic-comment.yaml",
+    content: `id: north/missing-semantic-comment
+language: tsx
+severity: info
+message: "Exported component should have @north-role JSDoc annotation"
+rule:
+  kind: export_statement
+note: |
+  Add a JSDoc comment with @north-role to document the component's purpose:
+
+  /**
+   * @north-role button variant with loading state
+   */
+  export function LoadingButton() { ... }
+
+  This helps with codebase documentation and enables better tooling support.
+  Only applies to composed components, not primitives or layouts.
+`,
+  },
 ];
