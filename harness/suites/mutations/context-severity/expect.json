@@ -1,0 +1,11 @@
+{
+  "rules": {
+    "north/no-arbitrary-values": 2
+  },
+  "severities": {
+    "north/no-arbitrary-values": {
+      "error": 1,
+      "warn": 1
+    }
+  }
+}

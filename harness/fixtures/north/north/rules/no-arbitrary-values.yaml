@@ -1,0 +1,14 @@
+id: north/no-arbitrary-values
+language: tsx
+severity: error
+message: "Use scale tokens or variable shorthand instead of arbitrary literal values"
+rule:
+  kind: string_fragment
+  regex: "\\[[^\\]]+\\]"
+note: |
+  Prohibited: p-[13px], w-[347px], rounded-[5px]
+  Allowed: p-(--control-padding), w-(--sidebar-width)
+
+  Bracket values are allowed only if they reference a token:
+  - p-[calc(var(--spacing-md)*1.5)]
+  - w-[calc(var(--sidebar-width)+var(--spacing-lg))]

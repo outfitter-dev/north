@@ -1,0 +1,23 @@
+diff --git a/fixtures/harness/dynamic-extraction.tsx b/fixtures/harness/dynamic-extraction.tsx
+new file mode 100644
+index 0000000..29aeec6
+--- /dev/null
++++ b/fixtures/harness/dynamic-extraction.tsx
+@@ -0,0 +1,17 @@
++const isActive = true;
++const isWide = false;
++
++export function DynamicExtraction() {
++  return (
++    <section>
++      <div
++        className={cn(
++          "bg-red-500",
++          isActive && "text-foreground",
++          isWide ? "p-[13px]" : "p-4"
++        )}
++      />
++      <div className={`flex ${isActive ? "opacity-50" : ""}`} />
++    </section>
++  );
++}

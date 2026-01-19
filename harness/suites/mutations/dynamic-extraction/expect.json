@@ -1,0 +1,7 @@
+{
+  "rules": {
+    "north/non-literal-classname": 2,
+    "north/no-raw-palette": 1,
+    "north/no-arbitrary-values": 1
+  }
+}

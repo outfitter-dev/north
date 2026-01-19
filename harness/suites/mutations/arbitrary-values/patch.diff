@@ -1,0 +1,13 @@
+diff --git a/fixtures/harness/arbitrary-values.tsx b/fixtures/harness/arbitrary-values.tsx
+new file mode 100644
+index 0000000..6ce5d3f
+--- /dev/null
++++ b/fixtures/harness/arbitrary-values.tsx
+@@ -0,0 +1,7 @@
++export function ArbitraryValues() {
++  return (
++    <div className="p-[13px] w-[347px] rounded-[5px]">
++      Arbitrary values
++    </div>
++  );
++}

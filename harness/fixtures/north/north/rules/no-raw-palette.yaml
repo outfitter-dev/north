@@ -1,0 +1,12 @@
+id: north/no-raw-palette
+language: tsx
+severity: error
+message: "Use semantic color tokens instead of raw Tailwind palette colors"
+rule:
+  kind: string_fragment
+  regex: "(bg|text|border|ring|fill|stroke)-(red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)-\\d+(?:\\/\\d+)?"
+note: |
+  Replace with semantic token:
+  - bg-blue-500 -> bg-primary
+  - text-gray-600 -> text-muted-foreground
+  - border-slate-200 -> border-border

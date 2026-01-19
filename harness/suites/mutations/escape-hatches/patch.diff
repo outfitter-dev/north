@@ -1,0 +1,13 @@
+diff --git a/fixtures/harness/escape-hatches.tsx b/fixtures/harness/escape-hatches.tsx
+new file mode 100644
+index 0000000..0656e0d
+--- /dev/null
++++ b/fixtures/harness/escape-hatches.tsx
+@@ -0,0 +1,7 @@
++export function EscapeHatches() {
++  return (
++    <div className="p-[var(--spacing-md)] w-[calc(var(--sidebar-width)+var(--spacing-lg))] bg-red-500">
++      Escape hatches
++    </div>
++  );
++}
