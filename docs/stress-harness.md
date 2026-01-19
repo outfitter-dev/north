@@ -120,3 +120,14 @@ bun run harness fuzz --limit 10
 ```
 
 Fixtures live under `harness/fixtures/fuzz/cases` and are enumerated in `harness/fixtures/fuzz/manifest.json`.
+
+## UI probes
+
+UI probes spin up a dev server and validate runtime UI behavior across viewports.
+
+```bash
+bun run harness ui-probes
+bun run harness ui-probes --route home
+```
+
+Evidence bundles (JSON + screenshots) are written to `harness/artifacts/ui-probes/<repo>/<sha>/<scenario>/`.
