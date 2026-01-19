@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://north.dev/schema.json
+
+# Extend from org or base (set to null for standalone)
+extends: null
+
+# Style dials
+dials:
+  radius: md            # xs | sm | md | lg | full
+  shadows: default      # none | subtle | default | pronounced
+  density: default      # compact | default | comfortable
+  contrast: default     # low | default | high
+
+# Typography configuration
+typography:
+  scale: default        # compact | default | relaxed
+  measure:
+    min: 45             # Minimum characters per line for prose
+    max: 75             # Maximum characters per line for prose
+
+# Policy dials
+policy:
+  complexity: progressive  # progressive | dense
+
+# Colors (OKLCH format)
+# Uncomment to customize:
+# colors:
+#   primary: oklch(0.546 0.245 262)
+#   background: oklch(1 0 0)
+
+# Rule configuration
+rules:
+  no-raw-palette: error
+  no-arbitrary-colors: error
+  no-arbitrary-values: error
+
+  repeated-spacing-pattern:
+    level: warn
+    threshold: 3
+
+  component-complexity:
+    level: warn
+    max-classes: 15
+
+  deviation-tracking:
+    level: info
+    promote-threshold: 3
+
+# Third-party component policy
+third-party:
+  allowed:
+    - package: "@radix-ui/*"
+      reason: "Headless primitives, styled by shadcn layer"
+    - package: "react-day-picker"
+      reason: "Calendar primitive"
+    - package: "recharts"
+      reason: "Charts use --chart-* tokens"
+    - package: "cmdk"
+      reason: "Command palette primitive"
