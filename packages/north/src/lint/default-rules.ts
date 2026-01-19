@@ -70,4 +70,23 @@ note: |
   This rule is ERROR in primitive context where strict token usage is required.
 `,
   },
+  {
+    filename: "no-inline-color.yaml",
+    content: `id: north/no-inline-color
+language: tsx
+severity: error
+message: "Use CSS variables or Tailwind classes instead of inline color literals"
+rule:
+  kind: jsx_attribute
+  has:
+    kind: property_identifier
+    regex: "^style$"
+note: |
+  Prohibited: style={{ color: '#ff0000' }}, style={{ backgroundColor: 'red' }}
+  Allowed: style={{ color: 'var(--foreground)' }}, className="text-foreground"
+
+  Inline color literals bypass the design system. Use CSS variables or
+  Tailwind utility classes to ensure consistency and dark mode support.
+`,
+  },
 ];
