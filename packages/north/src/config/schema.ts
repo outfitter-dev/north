@@ -144,6 +144,7 @@ export const RulesConfigSchema = z
         "promote-threshold": z.number().int().min(1).optional(),
       })
       .optional(),
+    "extract-repeated-classes": SimpleRuleConfigSchema.optional(),
   })
   .optional();
 
