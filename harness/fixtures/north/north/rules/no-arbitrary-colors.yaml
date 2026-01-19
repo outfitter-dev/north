@@ -1,0 +1,10 @@
+id: north/no-arbitrary-colors
+language: tsx
+severity: error
+message: "Use semantic color tokens instead of arbitrary color values"
+rule:
+  kind: string_fragment
+  regex: "(bg|text|border|ring|fill|stroke)-\\[(#|rgb|rgba|hsl|hsla|oklch|lab|lch)[^\\]]+\\]"
+note: |
+  Prohibited: bg-[#ff0000], text-[rgb(0,0,0)]
+  Use semantic tokens: bg-destructive, text-foreground

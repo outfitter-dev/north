@@ -1,0 +1,9 @@
+{
+  "repo": {
+    "name": "north",
+    "url": "https://github.com/outfitter-dev/north.git",
+    "sha": "66136affbf5faa09df93e6eeb65c497059818a64"
+  },
+  "basePatch": "base.patch",
+  "timeoutMs": 60000
+}

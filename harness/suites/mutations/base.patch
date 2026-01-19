@@ -1,0 +1,72 @@
+diff --git a/north/north.config.yaml b/north/north.config.yaml
+new file mode 100644
+index 0000000..220f29f
+--- /dev/null
++++ b/north/north.config.yaml
+@@ -0,0 +1,12 @@
++extends: null
++
++rules:
++  no-raw-palette: error
++  no-arbitrary-colors: error
++  no-arbitrary-values: error
++
++lint:
++  classFunctions:
++    - cn
++    - clsx
++    - cva
+diff --git a/north/rules/no-raw-palette.yaml b/north/rules/no-raw-palette.yaml
+new file mode 100644
+index 0000000..2413f63
+--- /dev/null
++++ b/north/rules/no-raw-palette.yaml
+@@ -0,0 +1,12 @@
++id: north/no-raw-palette
++language: tsx
++severity: error
++message: "Use semantic color tokens instead of raw Tailwind palette colors"
++rule:
++  kind: string_fragment
++  regex: "(bg|text|border|ring|fill|stroke)-(red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)-\\d+(?:\\/\\d+)?"
++note: |
++  Replace with semantic token:
++  - bg-blue-500 -> bg-primary
++  - text-gray-600 -> text-muted-foreground
++  - border-slate-200 -> border-border
+diff --git a/north/rules/no-arbitrary-values.yaml b/north/rules/no-arbitrary-values.yaml
+new file mode 100644
+index 0000000..a131241
+--- /dev/null
++++ b/north/rules/no-arbitrary-values.yaml
+@@ -0,0 +1,14 @@
++id: north/no-arbitrary-values
++language: tsx
++severity: error
++message: "Use scale tokens or variable shorthand instead of arbitrary literal values"
++rule:
++  kind: string_fragment
++  regex: "\\[[^\\]]+\\]"
++note: |
++  Prohibited: p-[13px], w-[347px], rounded-[5px]
++  Allowed: p-(--control-padding), w-(--sidebar-width)
++
++  Bracket values are allowed only if they reference a token:
++  - p-[calc(var(--spacing-md)*1.5)]
++  - w-[calc(var(--sidebar-width)+var(--spacing-lg))]
+diff --git a/north/rules/no-arbitrary-colors.yaml b/north/rules/no-arbitrary-colors.yaml
+new file mode 100644
+index 0000000..8e261f5
+--- /dev/null
++++ b/north/rules/no-arbitrary-colors.yaml
+@@ -0,0 +1,10 @@
++id: north/no-arbitrary-colors
++language: tsx
++severity: error
++message: "Use semantic color tokens instead of arbitrary color values"
++rule:
++  kind: string_fragment
++  regex: "(bg|text|border|ring|fill|stroke)-\\[(#|rgb|rgba|hsl|hsla|oklch|lab|lch)[^\\]]+\\]"
++note: |
++  Prohibited: bg-[#ff0000], text-[rgb(0,0,0)]
++  Use semantic tokens: bg-destructive, text-foreground

@@ -1,0 +1,13 @@
+diff --git a/fixtures/harness/palette-drift.tsx b/fixtures/harness/palette-drift.tsx
+new file mode 100644
+index 0000000..440e45b
+--- /dev/null
++++ b/fixtures/harness/palette-drift.tsx
+@@ -0,0 +1,7 @@
++export function PaletteDrift() {
++  return (
++    <div className="bg-red-500 text-blue-600 border-slate-200">
++      Palette drift
++    </div>
++  );
++}

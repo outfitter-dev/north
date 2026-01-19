@@ -47,3 +47,7 @@ coverage/
 *.tmp
 *.temp
 .scratch/
+
+# Harness
+harness/.cache/
+harness/artifacts/

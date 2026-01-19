@@ -1,0 +1,19 @@
+diff --git a/layouts/context-layout.tsx b/layouts/context-layout.tsx
+new file mode 100644
+index 0000000..e3fe055
+--- /dev/null
++++ b/layouts/context-layout.tsx
+@@ -0,0 +1,4 @@
++// @north context: layout
++export function ContextLayout() {
++  return <div className="p-[13px]">Layout context</div>;
++}
+diff --git a/components/context-card.tsx b/components/context-card.tsx
+new file mode 100644
+index 0000000..0d77f40
+--- /dev/null
++++ b/components/context-card.tsx
+@@ -0,0 +1,3 @@
++export function ContextCard() {
++  return <div className="p-[13px]">Composed context</div>;
++}
