@@ -131,3 +131,14 @@ bun run harness ui-probes --route home
 ```
 
 Evidence bundles (JSON + screenshots) are written to `harness/artifacts/ui-probes/<repo>/<sha>/<scenario>/`.
+
+## Promote + Refactor suite
+
+Promote scenarios inject repeated patterns, run `north promote`, apply codemods, and verify reductions with `north check --strict`.
+
+```bash
+bun run harness promote
+bun run harness promote --scenario golden-button
+```
+
+Artifacts include before/after pattern counts, dry-run output, and base.css diffs under `harness/artifacts/promote/<scenario>/`.
