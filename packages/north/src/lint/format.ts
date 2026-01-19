@@ -42,17 +42,23 @@ function formatIssueDetail(issue: LintIssue): string[] {
 export function formatLintReport(report: LintReport): string {
   const lines: string[] = [];
   const { errors, warnings, info } = report.summary;
+  const deviationCount = report.deviations.length;
 
   if (report.issues.length === 0) {
-    lines.push(chalk.bold.green("✓ No lint issues found"));
+    const successMessage = chalk.bold.green("✓ No lint issues found");
+    if (deviationCount > 0) {
+      lines.push(`${successMessage} ${chalk.dim(`(${deviationCount} deviations acknowledged)`)}`);
+    } else {
+      lines.push(successMessage);
+    }
     return lines.join("\n");
   }
 
-  lines.push(
-    chalk.bold(
-      `Found ${report.issues.length} issues (${errors} errors, ${warnings} warnings, ${info} info)`
-    )
-  );
+  let summaryLine = `Found ${report.issues.length} issues (${errors} errors, ${warnings} warnings, ${info} info)`;
+  if (deviationCount > 0) {
+    summaryLine += chalk.dim(` [${deviationCount} deviations]`);
+  }
+  lines.push(chalk.bold(summaryLine));
   lines.push("");
 
   for (const issue of report.issues) {
