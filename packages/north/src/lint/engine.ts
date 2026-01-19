@@ -360,6 +360,60 @@ const COLOR_LITERAL_PATTERN =
  * Scan source code for inline style attributes with literal color values.
  * Returns issues for each violation of the no-inline-color rule.
  */
+// Class count thresholds by context for component-complexity rule
+const COMPLEXITY_THRESHOLDS: Record<string, number> = {
+  primitive: 10,
+  composed: 15,
+  layout: 20,
+};
+
+/**
+ * Evaluate component complexity based on class count at each site.
+ * Returns issues for sites exceeding context-specific thresholds.
+ */
+function evaluateComponentComplexity(
+  sites: ExtractionResult["sites"],
+  filePath: string,
+  config: NorthConfig
+): LintIssue[] {
+  const ruleConfig = resolveBuiltinRuleConfig(config, "component-complexity", "warn");
+
+  // Skip if rule is disabled
+  if (ruleConfig.level === "off") {
+    return [];
+  }
+
+  const issues: LintIssue[] = [];
+
+  // Use configured max-classes if provided, otherwise use context-specific defaults
+  const configuredMaxClasses =
+    typeof ruleConfig.options["max-classes"] === "number"
+      ? ruleConfig.options["max-classes"]
+      : null;
+
+  for (const site of sites) {
+    // Config max-classes overrides context-specific thresholds
+    const threshold = configuredMaxClasses ?? COMPLEXITY_THRESHOLDS[site.context] ?? 15;
+    const classCount = site.classes.length;
+
+    if (classCount > threshold) {
+      issues.push({
+        ruleId: "north/component-complexity",
+        ruleKey: "component-complexity",
+        severity: ruleConfig.level as Exclude<RuleSeverity, "off">,
+        message: `className has ${classCount} classes, exceeds ${site.context} threshold of ${threshold}`,
+        filePath,
+        line: site.line,
+        column: site.column,
+        context: site.context,
+        note: "Consider extracting repeated patterns to utility functions or using cva() variants.",
+      });
+    }
+  }
+
+  return issues;
+}
+
 function scanInlineColorStyles(source: string, filePath: string, config: NorthConfig): LintIssue[] {
   const ruleConfig = resolveBuiltinRuleConfig(config, "no-inline-color", "error");
 
@@ -455,6 +509,9 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
 
         // Scan for inline style color violations
         rawIssues.push(...scanInlineColorStyles(source, displayPath, config));
+
+        // Evaluate component complexity at site level
+        rawIssues.push(...evaluateComponentComplexity(extraction.sites, displayPath, config));
       }
     } catch (error) {
       rawIssues.push({
