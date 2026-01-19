@@ -1,8 +1,17 @@
-import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { access, copyFile, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 
 export async function ensureDir(path: string) {
   await mkdir(path, { recursive: true });
+}
+
+export async function pathExists(path: string) {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function emptyDir(path: string) {
@@ -32,4 +41,9 @@ export async function writeText(path: string, value: string) {
 export async function copyFileSafe(from: string, to: string) {
   await ensureDir(dirname(to));
   await copyFile(from, to);
+}
+
+export async function copyDir(from: string, to: string) {
+  await ensureDir(dirname(to));
+  await cp(from, to, { recursive: true });
 }

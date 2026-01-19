@@ -89,3 +89,23 @@ Each mutation suite writes:
 ### CI
 
 The mutation suite runs on every PR via `Harness (Mutations)` in `.github/workflows/ci.yml`.
+
+## Corpus suite
+
+Corpus runs North across pinned repos using invariant checks instead of exact counts.
+
+```bash
+bun run harness corpus
+bun run harness corpus --repo north
+```
+
+`harness/corpus.yaml` defines repos and defaults.
+
+Invariants enforced:
+
+- completion within time budget
+- extraction coverage ≥ threshold
+- deterministic output across consecutive runs
+- injected probe violations detected
+
+Artifacts are written to `harness/artifacts/corpus/<repo>/` with reports and logs.

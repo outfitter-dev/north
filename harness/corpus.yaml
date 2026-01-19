@@ -1,0 +1,23 @@
+defaults:
+  timeBudgetMs: 120000
+  coverageThreshold: 10
+  determinismRuns: 2
+
+repos:
+  - name: north
+    url: https://github.com/outfitter-dev/north.git
+    sha: 66136affbf5faa09df93e6eeb65c497059818a64
+    type: next
+    paths:
+      - examples/nextjs-shadcn
+    index: true
+
+  - name: navigator
+    url: https://github.com/outfitter-dev/navigator.git
+    sha: 616cabd807823a19c6e054e55b697da38f4a7bfe
+    type: vite
+
+  - name: agent-browser
+    url: https://github.com/outfitter-dev/agent-browser.git
+    sha: 6abee3764105ca823f4688bb799279e447671f55
+    type: vite

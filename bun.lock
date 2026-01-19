@@ -9,6 +9,7 @@
         "lefthook": "^1.9.4",
         "turbo": "^2.3.3",
         "typescript": "^5.7.2",
+        "yaml": "^2.6.1",
       },
     },
     "examples/nextjs-shadcn": {
