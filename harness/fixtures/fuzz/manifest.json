@@ -1,0 +1,283 @@
+{
+  "cases": [
+    {
+      "id": "case-01-literal",
+      "file": "cases/case-01-literal.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1
+        }
+      }
+    },
+    {
+      "id": "case-02-arbitrary-values",
+      "file": "cases/case-02-arbitrary-values.tsx",
+      "expect": {
+        "rules": {
+          "north/no-arbitrary-values": 2
+        }
+      }
+    },
+    {
+      "id": "case-03-arbitrary-color",
+      "file": "cases/case-03-arbitrary-color.tsx",
+      "expect": {
+        "rules": {
+          "north/no-arbitrary-colors": 1
+        }
+      }
+    },
+    {
+      "id": "case-04-escape-hatch",
+      "file": "cases/case-04-escape-hatch.tsx",
+      "expect": {
+        "rules": {}
+      }
+    },
+    {
+      "id": "case-05-nonliteral-cn",
+      "file": "cases/case-05-nonliteral-cn.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1,
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-06-nested-cn",
+      "file": "cases/case-06-nested-cn.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1,
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-07-clsx-array",
+      "file": "cases/case-07-clsx-array.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1,
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-08-clsx-object",
+      "file": "cases/case-08-clsx-object.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1,
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-09-template-literal",
+      "file": "cases/case-09-template-literal.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1
+        }
+      }
+    },
+    {
+      "id": "case-10-template-interp",
+      "file": "cases/case-10-template-interp.tsx",
+      "expect": {
+        "rules": {
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-11-long-string",
+      "file": "cases/case-11-long-string.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1
+        }
+      }
+    },
+    {
+      "id": "case-12-concat",
+      "file": "cases/case-12-concat.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1,
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-13-cn-template",
+      "file": "cases/case-13-cn-template.tsx",
+      "expect": {
+        "rules": {
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-14-array-join",
+      "file": "cases/case-14-array-join.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1,
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-15-conditional",
+      "file": "cases/case-15-conditional.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1,
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-16-no-violation",
+      "file": "cases/case-16-no-violation.tsx",
+      "expect": {
+        "rules": {}
+      }
+    },
+    {
+      "id": "case-17-whitespace",
+      "file": "cases/case-17-whitespace.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1
+        }
+      }
+    },
+    {
+      "id": "case-18-arbitrary-color",
+      "file": "cases/case-18-arbitrary-color.tsx",
+      "expect": {
+        "rules": {
+          "north/no-arbitrary-colors": 1
+        }
+      }
+    },
+    {
+      "id": "case-19-identifier",
+      "file": "cases/case-19-identifier.tsx",
+      "expect": {
+        "rules": {
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-20-cva",
+      "file": "cases/case-20-cva.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1,
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-21-cn-template-mix",
+      "file": "cases/case-21-cn-template-mix.tsx",
+      "expect": {
+        "rules": {
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-22-commented-string",
+      "file": "cases/case-22-commented-string.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1
+        }
+      }
+    },
+    {
+      "id": "case-23-template-only",
+      "file": "cases/case-23-template-only.tsx",
+      "expect": {
+        "rules": {
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-24-nested-clsx",
+      "file": "cases/case-24-nested-clsx.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1,
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-25-array-object-mix",
+      "file": "cases/case-25-array-object-mix.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1,
+          "north/no-arbitrary-values": 1,
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-26-unknown-fn",
+      "file": "cases/case-26-unknown-fn.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1,
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-27-parenthesized",
+      "file": "cases/case-27-parenthesized.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1
+        }
+      }
+    },
+    {
+      "id": "case-28-as-expression",
+      "file": "cases/case-28-as-expression.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1
+        }
+      }
+    },
+    {
+      "id": "case-29-conditional-array",
+      "file": "cases/case-29-conditional-array.tsx",
+      "expect": {
+        "rules": {
+          "north/no-raw-palette": 1,
+          "north/non-literal-classname": 1
+        }
+      }
+    },
+    {
+      "id": "case-30-array-spread",
+      "file": "cases/case-30-array-spread.tsx",
+      "expect": {
+        "rules": {
+          "north/non-literal-classname": 1
+        }
+      }
+    }
+  ]
+}

@@ -109,3 +109,14 @@ Invariants enforced:
 - injected probe violations detected
 
 Artifacts are written to `harness/artifacts/corpus/<repo>/` with reports and logs.
+
+## Fuzz suite
+
+Fuzz runs a static fixture set to validate extraction edge cases and warning behavior.
+
+```bash
+bun run harness fuzz
+bun run harness fuzz --limit 10
+```
+
+Fixtures live under `harness/fixtures/fuzz/cases` and are enumerated in `harness/fixtures/fuzz/manifest.json`.
