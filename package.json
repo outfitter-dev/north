@@ -11,7 +11,9 @@
     "typecheck": "turbo run typecheck",
     "check": "turbo run check",
     "format": "turbo run format",
-    "harness": "bun run ./harness/run.ts"
+    "harness": "bun run ./harness/run.ts",
+    "harness:bump-sha": "bun run ./harness/bump-sha.ts",
+    "harness:repos": "bun run ./harness/repos.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

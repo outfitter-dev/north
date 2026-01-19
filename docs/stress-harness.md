@@ -31,6 +31,18 @@ harness/
 
 Pinned repos live in `harness/repos.json`. Suites reference repos by name (for example, `repo: north`), and corpus entries can be marked `enabled: false` to keep heavier repos out of default runs.
 
+### Repo tools
+
+Defaults to bumping all repos to `HEAD` when no filters are provided.
+
+```bash
+bun run harness:repos list
+bun run harness:repos add --name my-app --url https://github.com/org/repo.git --tag opt-in
+bun run harness:bump-sha --repo north
+bun run harness:bump-sha --tag opt-in
+bun run harness:bump-sha --repo my-app --ref main
+```
+
 ## Mutation suite
 
 Mutations clone a pinned golden repo, apply a base patch + mutation patch, and run `north check --json --staged`. Results are compared against `expect.json`.
