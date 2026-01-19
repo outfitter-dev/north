@@ -111,6 +111,13 @@ export {
 } from "./commands/check.ts";
 
 export {
+  find,
+  type FindOptions,
+  type FindResult,
+  FindError,
+} from "./commands/find.ts";
+
+export {
   runIndex,
   type IndexOptions,
   type IndexResult,

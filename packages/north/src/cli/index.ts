@@ -3,6 +3,7 @@
 import { Command } from "commander";
 import { check } from "../commands/check.ts";
 import { doctor } from "../commands/doctor.ts";
+import { find } from "../commands/find.ts";
 import { generateTokens } from "../commands/gen.ts";
 import { runIndex } from "../commands/index.ts";
 import { init } from "../commands/init.ts";
@@ -92,6 +93,45 @@ program
       config: options.config,
       json: options.json,
       staged: options.staged,
+    });
+
+    if (!result.success) {
+      process.exit(1);
+    }
+  });
+
+// ============================================================================
+// find - Discovery tools
+// ============================================================================
+
+program
+  .command("find")
+  .description("Discover design system usage")
+  .option("-c, --config <path>", "Path to config file")
+  .option("--colors", "Color usage report")
+  .option("--spacing", "Spacing usage report")
+  .option("--patterns", "Repeated class patterns")
+  .option("--tokens", "Token usage report")
+  .option("--cascade <selector>", "Cascade debugger for selector or token")
+  .option("--similar <file>", "Find similar components")
+  .option("--threshold <number>", "Similarity threshold (0-1)", Number.parseFloat)
+  .option("--limit <number>", "Limit results", Number.parseInt)
+  .option("--json", "Output JSON")
+  .option("-q, --quiet", "Suppress output")
+  .action(async (options) => {
+    const result = await find({
+      cwd: process.cwd(),
+      config: options.config,
+      json: options.json,
+      quiet: options.quiet,
+      colors: options.colors,
+      spacing: options.spacing,
+      patterns: options.patterns,
+      tokens: options.tokens,
+      cascade: options.cascade,
+      similar: options.similar,
+      threshold: options.threshold,
+      limit: options.limit,
     });
 
     if (!result.success) {
