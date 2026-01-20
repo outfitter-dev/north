@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
 import { glob } from "glob";
+import { minimatch } from "minimatch";
 import { findConfigFile, loadConfig } from "../config/loader.ts";
 import type { NorthConfig } from "../config/schema.ts";
 import { extractClassTokens } from "./extract.ts";
@@ -135,7 +136,21 @@ function isArbitraryValueViolation(className: string): boolean {
   return true;
 }
 
+function isFileIgnoredForRule(rule: LoadedRule, filePath: string): boolean {
+  if (!rule.ignore || rule.ignore.length === 0) {
+    return false;
+  }
+  // Normalize Windows backslashes to forward slashes for cross-platform pattern matching
+  const normalizedPath = filePath.replace(/\\/g, "/");
+  return rule.ignore.some((pattern) => minimatch(normalizedPath, pattern));
+}
+
 function evaluateRule(rule: LoadedRule, token: ClassToken): LintIssue | null {
+  // Check rule-level file ignores first
+  if (isFileIgnoredForRule(rule, token.filePath)) {
+    return null;
+  }
+
   const severity = adjustSeverityForContext(rule.key, rule.severity, token.context);
   if (severity === "off") {
     return null;

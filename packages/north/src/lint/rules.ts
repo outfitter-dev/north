@@ -27,27 +27,34 @@ function normalizeRuleKey(ruleId: string): string {
   return parts[parts.length - 1] ?? ruleId;
 }
 
-function resolveRuleLevel(config: NorthConfig, ruleKey: string): RuleSeverity | null {
+interface RuleConfigResolution {
+  level: RuleSeverity | null;
+  ignore: string[] | null;
+}
+
+function resolveRuleConfig(config: NorthConfig, ruleKey: string): RuleConfigResolution {
   const rulesConfig = config.rules;
   if (!rulesConfig) {
-    return null;
+    return { level: null, ignore: null };
   }
 
   const value = rulesConfig[ruleKey as keyof typeof rulesConfig];
 
   if (!value) {
-    return null;
+    return { level: null, ignore: null };
   }
 
   if (typeof value === "string") {
-    return value as RuleSeverity;
+    return { level: value as RuleSeverity, ignore: null };
   }
 
-  if (typeof value === "object" && "level" in value) {
-    return value.level as RuleSeverity;
+  if (typeof value === "object") {
+    const level = "level" in value ? (value.level as RuleSeverity) : null;
+    const ignore = "ignore" in value && Array.isArray(value.ignore) ? value.ignore : null;
+    return { level, ignore };
   }
 
-  return null;
+  return { level: null, ignore: null };
 }
 
 function toSeverity(value: unknown, fallback: RuleSeverity): RuleSeverity {
@@ -89,9 +96,9 @@ export async function loadRules(rulesDir: string, config: NorthConfig): Promise<
       }
 
       const ruleKey = normalizeRuleKey(id);
-      const ruleLevel = resolveRuleLevel(config, ruleKey);
+      const ruleConfigResolution = resolveRuleConfig(config, ruleKey);
       const baseSeverity = toSeverity(data.severity, "warn");
-      const severity = ruleLevel ?? baseSeverity;
+      const severity = ruleConfigResolution.level ?? baseSeverity;
 
       if (severity === "off") {
         continue;
@@ -109,6 +116,7 @@ export async function loadRules(rulesDir: string, config: NorthConfig): Promise<
         note: typeof data.note === "string" ? data.note : undefined,
         regex,
         sourcePath: resolve(filePath),
+        ignore: ruleConfigResolution.ignore ?? undefined,
       });
     } catch (error) {
       if (error instanceof RuleLoadError) {
