@@ -7,6 +7,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { registerCheckTool } from "./tools/check.ts";
 import { registerContextTool } from "./tools/context.ts";
 import { registerDiscoverTool } from "./tools/discover.ts";
 import { getGuidance, registerStatusTool } from "./tools/index.ts";
@@ -158,6 +159,7 @@ function registerTools(server: McpServer): void {
 
   // Tier 2: Config-dependent tools
   registerContextTool(server);
+  registerCheckTool(server);
 
   // Tier 3: Index-dependent tools
   registerDiscoverTool(server);
