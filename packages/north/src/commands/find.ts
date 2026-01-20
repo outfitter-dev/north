@@ -128,7 +128,7 @@ interface ThemeVariantValue {
   source: string;
 }
 
-interface CascadeResult {
+export interface CascadeResult {
   selector: string;
   className?: string;
   resolvedToken?: string;
@@ -138,6 +138,9 @@ interface CascadeResult {
   themeVariants?: {
     light?: ThemeVariantValue;
     dark?: ThemeVariantValue;
+  };
+  tokenDependencies?: {
+    downstream: string[];
   };
 }
 
@@ -499,7 +502,7 @@ function buildSimilarity(
   };
 }
 
-function buildCascade(db: IndexDatabase, selector: string, limit: number): CascadeResult {
+export function buildCascade(db: IndexDatabase, selector: string, limit: number): CascadeResult {
   const trimmed = selector.trim();
   const isTokenSelector = trimmed.startsWith("--");
   const className = isTokenSelector
@@ -619,6 +622,22 @@ function buildCascade(db: IndexDatabase, selector: string, limit: number): Casca
     }
   }
 
+  // Query downstream dependencies - tokens that depend on this token
+  let tokenDependencies: CascadeResult["tokenDependencies"];
+  if (resolvedToken) {
+    const downstreamRows = db
+      .prepare(
+        "SELECT DISTINCT descendant FROM token_graph WHERE ancestor = ? ORDER BY descendant ASC"
+      )
+      .all(resolvedToken) as Array<{ descendant: string }>;
+
+    if (downstreamRows.length > 0) {
+      tokenDependencies = {
+        downstream: downstreamRows.map((row) => row.descendant),
+      };
+    }
+  }
+
   return {
     selector: trimmed,
     className,
@@ -627,6 +646,7 @@ function buildCascade(db: IndexDatabase, selector: string, limit: number): Casca
     tokenChain,
     usages,
     themeVariants,
+    tokenDependencies,
   };
 }
 
@@ -917,6 +937,13 @@ export async function find(options: FindOptions = {}): Promise<FindResult> {
           if (result.themeVariants.dark) {
             console.log(chalk.dim(`  dark: ${result.themeVariants.dark.resolved}`));
             console.log(chalk.dim(`    source: ${result.themeVariants.dark.source}`));
+          }
+        }
+
+        if (result.tokenDependencies && result.tokenDependencies.downstream.length > 0) {
+          console.log(chalk.dim("\nDownstream dependencies:"));
+          for (const token of result.tokenDependencies.downstream) {
+            console.log(chalk.dim(`  - ${token}`));
           }
         }
       }
