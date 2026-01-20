@@ -7,8 +7,11 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { detectContext } from "./state.ts";
+import { getGuidance, registerStatusTool } from "./tools/index.ts";
 import type { ServerState } from "./types.ts";
+
+// Re-export getGuidance for backward compatibility with tests
+export { getGuidance };
 
 // ============================================================================
 // Server Configuration
@@ -146,70 +149,10 @@ export function getToolsForState(state: ServerState): TieredTool[] {
  * Tools are registered once; context is detected per-call.
  */
 function registerTools(server: McpServer): void {
-  // Status tool - always available, reports current state
-  server.registerTool(
-    "north_status",
-    {
-      description:
-        "Get North design system status. Returns current state (none/config/indexed), " +
-        "available capabilities, and guidance on next steps.",
-    },
-    async () => {
-      const cwd = process.cwd();
-      const ctx = await detectContext(cwd);
+  // Tier 1: Always available
+  registerStatusTool(server);
 
-      const status = {
-        state: ctx.state,
-        cwd: ctx.cwd,
-        configPath: ctx.configPath ?? null,
-        indexPath: ctx.indexPath ?? null,
-        capabilities: {
-          check: ctx.state !== "none",
-          find: ctx.state === "indexed",
-          context: ctx.state !== "none",
-          generate: ctx.state !== "none",
-        },
-        guidance: getGuidance(ctx.state),
-      };
-
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(status, null, 2),
-          },
-        ],
-      };
-    }
-  );
-}
-
-/**
- * Get guidance based on current server state.
- */
-export function getGuidance(state: ServerState): string[] {
-  switch (state) {
-    case "none":
-      return [
-        "No North configuration found.",
-        "Run 'north init' to initialize the project.",
-        "Then run 'north gen' to generate design tokens.",
-      ];
-    case "config":
-      return [
-        "Configuration found but no index.",
-        "Run 'north index' to build the token index for full functionality.",
-        "Use 'north check' to lint for design system violations.",
-        "Use 'north context' to get design system context for LLMs.",
-      ];
-    case "indexed":
-      return [
-        "Full functionality available.",
-        "Use 'north check' to lint for violations.",
-        "Use 'north find' to discover token usage patterns.",
-        "Use 'north context' for design system context.",
-      ];
-  }
+  // Tier 2 and 3 tools will be added in future commits
 }
 
 // ============================================================================
