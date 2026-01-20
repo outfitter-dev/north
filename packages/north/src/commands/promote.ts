@@ -5,6 +5,7 @@ import chalk from "chalk";
 import { writeFileAtomic } from "../generation/file-writer.ts";
 import { type IndexDatabase, openIndexDatabase } from "../index/db.ts";
 import { checkIndexFresh, getIndexStatus } from "../index/queries.ts";
+import { getUtilitySegment } from "../lib/utility-classification.ts";
 
 // ============================================================================
 // Error Types
@@ -139,46 +140,6 @@ function splitPattern(pattern: string): string[] {
   }
 
   return tokens.filter(Boolean);
-}
-
-function splitByDelimiter(input: string, delimiter: string): string[] {
-  const parts: string[] = [];
-  let current = "";
-  let bracketDepth = 0;
-  let parenDepth = 0;
-
-  for (let i = 0; i < input.length; i += 1) {
-    const char = input[i];
-    if (!char) {
-      continue;
-    }
-
-    if (char === "[") {
-      bracketDepth += 1;
-    } else if (char === "]") {
-      bracketDepth = Math.max(0, bracketDepth - 1);
-    } else if (char === "(") {
-      parenDepth += 1;
-    } else if (char === ")") {
-      parenDepth = Math.max(0, parenDepth - 1);
-    }
-
-    if (char === delimiter && bracketDepth === 0 && parenDepth === 0) {
-      parts.push(current);
-      current = "";
-      continue;
-    }
-
-    current += char;
-  }
-
-  parts.push(current);
-  return parts;
-}
-
-function getUtilitySegment(className: string): string {
-  const parts = splitByDelimiter(className, ":");
-  return parts[parts.length - 1] ?? className;
 }
 
 function normalizeClasses(classes: string[]): string[] {
