@@ -13,7 +13,6 @@ import type {
   Candidate,
   ClassToken,
   Deviation,
-  DeviationGroup,
   ExtractionResult,
   LintIssue,
   LintReport,
@@ -77,6 +76,17 @@ function adjustSeverityForContext(
 
   if (ruleKey === "no-arbitrary-values" && context === "layout" && severity === "error") {
     return "warn";
+  }
+
+  // numeric-spacing-in-component: off in layout, error in primitive, warn (default) in composed
+  if (ruleKey === "numeric-spacing-in-component") {
+    if (context === "layout") {
+      return "off";
+    }
+    if (context === "primitive") {
+      return "error";
+    }
+    // composed context keeps default (warn)
   }
 
   return severity;
