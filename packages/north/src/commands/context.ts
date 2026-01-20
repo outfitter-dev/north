@@ -1,9 +1,10 @@
-import { access } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import chalk from "chalk";
 import { findConfigFile, loadConfig } from "../config/loader.ts";
 import type { NorthConfig } from "../config/schema.ts";
 import { checkIndexFresh, getIndexStatus } from "../index/queries.ts";
+import { type TokenCategories, parseTokensFromCss } from "../tokens/parse-tokens.ts";
 
 // ============================================================================
 // Error Types
@@ -29,6 +30,7 @@ export interface ContextOptions {
   compact?: boolean;
   json?: boolean;
   quiet?: boolean;
+  includeValues?: boolean;
 }
 
 export interface ContextResult {
@@ -112,6 +114,7 @@ export async function context(options: ContextOptions = {}): Promise<ContextResu
   const compact = options.compact ?? false;
   const json = options.json ?? false;
   const quiet = options.quiet ?? false;
+  const includeValues = options.includeValues ?? false;
 
   try {
     const configPath = options.config ? resolve(cwd, options.config) : await findConfigFile(cwd);
@@ -136,6 +139,14 @@ export async function context(options: ContextOptions = {}): Promise<ContextResu
       fileExists(generatedPath),
       fileExists(basePath),
     ]);
+
+    // Parse tokens from generated.css
+    let tokenCategories: TokenCategories | null = null;
+    if (generatedExists) {
+      const generatedCss = await readFile(generatedPath, "utf-8");
+      const parsed = parseTokensFromCss(generatedCss, { includeValues });
+      tokenCategories = parsed.categories;
+    }
 
     const indexStatus = await getIndexStatus(cwd, configPath);
     const indexFreshness = indexStatus.exists
@@ -163,6 +174,7 @@ export async function context(options: ContextOptions = {}): Promise<ContextResu
         fresh: indexFreshness.fresh,
         counts: indexStatus.counts,
       },
+      tokens: tokenCategories,
       guidance,
     };
 
@@ -185,6 +197,13 @@ export async function context(options: ContextOptions = {}): Promise<ContextResu
           console.log(
             chalk.dim(`Rules: ${rules.map((rule) => `${rule.rule}=${rule.level}`).join(", ")}`)
           );
+        }
+        if (tokenCategories) {
+          const nonEmpty = Object.entries(tokenCategories).filter(
+            ([, tokens]) => tokens.length > 0
+          );
+          const summary = nonEmpty.map(([cat, tokens]) => `${cat}=${tokens.length}`).join(", ");
+          console.log(chalk.dim(`Tokens: ${summary}`));
         }
         if (guidance.length > 0) {
           console.log(chalk.dim(`Guidance: ${guidance.join(" ")}`));
@@ -234,6 +253,31 @@ export async function context(options: ContextOptions = {}): Promise<ContextResu
             `  counts: tokens=${indexStatus.counts.tokens}, usages=${indexStatus.counts.usages}, patterns=${indexStatus.counts.patterns}`
           )
         );
+
+        if (tokenCategories) {
+          console.log(chalk.dim("\nTokens (roles not values):"));
+          const categoryNames: Array<keyof TokenCategories> = [
+            "surfaces",
+            "colors",
+            "spacing",
+            "typography",
+            "radii",
+            "shadows",
+            "layers",
+            "controls",
+            "breakpoints",
+            "containers",
+          ];
+          for (const category of categoryNames) {
+            const tokens = tokenCategories[category];
+            if (tokens.length > 0) {
+              console.log(chalk.dim(`  ${category}: ${tokens.length} tokens`));
+            }
+          }
+          if (includeValues) {
+            console.log(chalk.dim("  (values included)"));
+          }
+        }
 
         console.log(chalk.dim("\nGuidance:"));
         for (const line of guidance) {
