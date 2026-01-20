@@ -132,4 +132,24 @@ note: |
   Only applies to composed components, not primitives or layouts.
 `,
   },
+  {
+    filename: "extract-repeated-classes.yaml",
+    content: `id: north/extract-repeated-classes
+language: tsx
+severity: info
+message: "Consider extracting repeated class pattern to a reusable utility"
+rule:
+  kind: string_fragment
+note: |
+  This rule queries the north index to find class patterns that appear
+  frequently across your codebase. Repeated patterns are candidates for:
+
+  - Extracting to a cn() utility function
+  - Creating a cva() variant
+  - Defining as a design token
+
+  Run 'north index' first to build the pattern index.
+  This rule is skipped gracefully if no index exists.
+`,
+  },
 ];
