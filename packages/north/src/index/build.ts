@@ -5,7 +5,7 @@ import { findConfigFile, loadConfig } from "../config/loader.ts";
 import { resolveClassToTokenValidated } from "../lib/utility-classification.ts";
 import { extractClassTokens } from "../lint/extract.ts";
 import type { ClassSite } from "../lint/types.ts";
-import { parseCssTokens } from "./css.ts";
+import { type ThemeVariants, parseCssTokensWithThemes } from "./css.ts";
 import type { IndexDatabase } from "./db.ts";
 import { openIndexDatabase } from "./db.ts";
 import type { ComponentGraphEntry } from "./extract-components.ts";
@@ -177,11 +177,12 @@ export async function buildIndex(options: BuildIndexOptions = {}): Promise<Index
   createIndexSchema(db);
 
   const tokensByName = new Map<string, TokenRecord>();
+  const allThemeVariants = new Map<string, ThemeVariants>();
 
   for (const cssFile of cssFiles) {
     const content = await readFile(cssFile, "utf-8");
     const relativePath = normalizePath(relative(cwd, cssFile));
-    const definitions = parseCssTokens(content, relativePath);
+    const { tokens: definitions, themeVariants } = parseCssTokensWithThemes(content, relativePath);
 
     for (const definition of definitions) {
       tokensByName.set(definition.name, {
@@ -193,6 +194,18 @@ export async function buildIndex(options: BuildIndexOptions = {}): Promise<Index
         computedValue: null,
         references: definition.references,
       });
+    }
+
+    // Merge theme variants from this file
+    for (const [tokenName, variants] of themeVariants) {
+      const existing = allThemeVariants.get(tokenName) ?? {};
+      if (variants.light) {
+        existing.light = variants.light;
+      }
+      if (variants.dark) {
+        existing.dark = variants.dark;
+      }
+      allThemeVariants.set(tokenName, existing);
     }
   }
 
@@ -277,6 +290,9 @@ export async function buildIndex(options: BuildIndexOptions = {}): Promise<Index
   const insertComponentGraph = db.prepare(
     "INSERT INTO component_graph (parent_file, parent_component, child_file, child_component, line) VALUES (?, ?, ?, ?, ?)"
   );
+  const insertTokenThemes = db.prepare(
+    "INSERT INTO token_themes (token_name, theme, value, source) VALUES (?, ?, ?, ?)"
+  );
   const insertMeta = db.prepare("INSERT INTO meta (key, value) VALUES (?, ?)");
 
   runTransaction(db, () => {
@@ -339,6 +355,16 @@ export async function buildIndex(options: BuildIndexOptions = {}): Promise<Index
         entry.childComponent,
         entry.line
       );
+    }
+
+    // Insert theme variants
+    for (const [tokenName, variants] of allThemeVariants) {
+      if (variants.light) {
+        insertTokenThemes.run(tokenName, "light", variants.light.value, variants.light.source);
+      }
+      if (variants.dark) {
+        insertTokenThemes.run(tokenName, "dark", variants.dark.value, variants.dark.source);
+      }
     }
 
     const totalFiles = stats.fileCount + stats.cssFileCount;
