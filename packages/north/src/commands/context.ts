@@ -3,7 +3,12 @@ import { resolve } from "node:path";
 import chalk from "chalk";
 import { findConfigFile, loadConfig } from "../config/loader.ts";
 import type { NorthConfig } from "../config/schema.ts";
-import { checkIndexFresh, getIndexStatus } from "../index/queries.ts";
+import {
+  type PatternSummary,
+  checkIndexFresh,
+  getIndexStatus,
+  getTopPatterns,
+} from "../index/queries.ts";
 import { type TokenCategories, parseTokensFromCss } from "../tokens/parse-tokens.ts";
 
 // ============================================================================
@@ -153,6 +158,12 @@ export async function context(options: ContextOptions = {}): Promise<ContextResu
       ? await checkIndexFresh(cwd, configPath)
       : { fresh: false };
 
+    // PR-110 Enhancement (#88): Query patterns from index when available
+    let patterns: PatternSummary[] | undefined;
+    if (indexStatus.exists && indexStatus.counts.patterns > 0) {
+      patterns = await getTopPatterns(cwd, configPath, 10);
+    }
+
     const payload = {
       kind: "context",
       compact,
@@ -176,6 +187,7 @@ export async function context(options: ContextOptions = {}): Promise<ContextResu
       },
       tokens: tokenCategories,
       guidance,
+      patterns,
     };
 
     if (json) {
@@ -207,6 +219,13 @@ export async function context(options: ContextOptions = {}): Promise<ContextResu
         }
         if (guidance.length > 0) {
           console.log(chalk.dim(`Guidance: ${guidance.join(" ")}`));
+        }
+        if (patterns && patterns.length > 0) {
+          const patternSummary = patterns
+            .slice(0, 3)
+            .map((p) => `${p.name}(${p.count})`)
+            .join(", ");
+          console.log(chalk.dim(`Patterns: ${patternSummary}${patterns.length > 3 ? "..." : ""}`));
         }
       } else {
         console.log(chalk.bold("North context\n"));
@@ -282,6 +301,16 @@ export async function context(options: ContextOptions = {}): Promise<ContextResu
         console.log(chalk.dim("\nGuidance:"));
         for (const line of guidance) {
           console.log(chalk.dim(`  - ${line}`));
+        }
+
+        if (patterns && patterns.length > 0) {
+          console.log(chalk.dim("\nPatterns (top by frequency):"));
+          for (const pattern of patterns) {
+            console.log(chalk.dim(`  ${pattern.name}: ${pattern.count} occurrences`));
+            if (pattern.exampleClasses.length > 0) {
+              console.log(chalk.dim(`    classes: ${pattern.exampleClasses.join(" ")}`));
+            }
+          }
         }
       }
     }

@@ -13,7 +13,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { loadConfig } from "../../config/loader.ts";
 import type { NorthConfig } from "../../config/schema.ts";
-import { checkIndexFresh, getIndexStatus } from "../../index/queries.ts";
+import { checkIndexFresh, getIndexStatus, getTopPatterns } from "../../index/queries.ts";
 import { detectContext } from "../state.ts";
 
 // ============================================================================
@@ -131,6 +131,12 @@ export interface ContextPayload {
     };
   };
   guidance: string[];
+  /** Pattern discovery enhancement from #88 */
+  patterns?: Array<{
+    name: string;
+    count: number;
+    exampleClasses: string[];
+  }>;
 }
 
 // ============================================================================
@@ -170,6 +176,13 @@ export async function executeContextTool(
     ? await checkIndexFresh(workingDir, configPath)
     : { fresh: false };
 
+  // PR-110 Enhancement (#88): Query patterns from index when available
+  let patterns: ContextPayload["patterns"];
+  if (indexStatus.exists && indexStatus.counts.patterns > 0) {
+    const topPatterns = await getTopPatterns(workingDir, configPath, 10);
+    patterns = topPatterns;
+  }
+
   return {
     kind: "context",
     compact,
@@ -192,6 +205,7 @@ export async function executeContextTool(
       counts: indexStatus.counts,
     },
     guidance,
+    patterns,
   };
 }
 
