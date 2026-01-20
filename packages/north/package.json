@@ -4,7 +4,8 @@
   "description": "Design system enforcement CLI tool",
   "type": "module",
   "bin": {
-    "north": "./dist/cli.js"
+    "north": "./dist/cli.js",
+    "north-mcp": "./dist/mcp.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -16,7 +17,7 @@
   },
   "files": ["dist", "README.md"],
   "scripts": {
-    "build": "bun build src/cli/index.ts --outdir dist --target node --format esm --entry-naming=cli.js --external @ast-grep/napi --external better-sqlite3 && bun build src/index.ts --outdir dist --target node --format esm --dts --external @ast-grep/napi --external better-sqlite3",
+    "build": "bun build src/cli/index.ts --outdir dist --target node --format esm --entry-naming=cli.js --external @ast-grep/napi --external better-sqlite3 && bun build src/mcp/index.ts --outdir dist --target node --format esm --entry-naming=mcp.js --external @ast-grep/napi --external better-sqlite3 --external @modelcontextprotocol/sdk && bun build src/index.ts --outdir dist --target node --format esm --dts --external @ast-grep/napi --external better-sqlite3",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "format": "biome format --write .",
@@ -25,6 +26,7 @@
   },
   "dependencies": {
     "@ast-grep/napi": "^0.40.5",
+    "@modelcontextprotocol/sdk": "^1.25.3",
     "better-sqlite3": "^11.7.0",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
