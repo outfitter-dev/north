@@ -5,8 +5,25 @@
  */
 
 // Status tool (Tier 1)
-export { executeStatusTool, getGuidance, registerStatusTool } from "./status.ts";
-export type { StatusResponse } from "./status.ts";
+export {
+  executeStatusTool,
+  getGuidance,
+  registerStatusTool,
+  StatusInputSchema,
+} from "./status.ts";
+export type { StatusInput, StatusResponse } from "./status.ts";
+
+// Check tool (Tier 2)
+export {
+  type CheckInput,
+  CheckInputSchema,
+  type CheckOptions,
+  type CheckResponse,
+  type CheckViolation,
+  type FixSuggestion,
+  executeCheckTool,
+  registerCheckTool,
+} from "./check.ts";
 
 // Check tool (Tier 2)
 export {
@@ -56,3 +73,17 @@ export {
   executeRefactorTool,
   registerRefactorTool,
 } from "./refactor.ts";
+
+// Query tool (Tier 3)
+export {
+  type NorthQueryParams,
+  type PatternRow,
+  type QueryInput,
+  QueryInputSchema,
+  type QueryOptions,
+  type QueryResponse,
+  type TokenRow,
+  type UsageRow,
+  executeQueryTool,
+  registerQueryTool,
+} from "./query.ts";
