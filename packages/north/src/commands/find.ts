@@ -2,6 +2,17 @@ import { relative, resolve } from "node:path";
 import chalk from "chalk";
 import { type IndexDatabase, openIndexDatabase } from "../index/db.ts";
 import { checkIndexFresh, getIndexStatus } from "../index/queries.ts";
+import {
+  FONT_WEIGHT_VALUES,
+  LEADING_VALUES,
+  SPACING_PREFIXES,
+  TRACKING_VALUES,
+  TYPOGRAPHY_PREFIXES,
+  TYPOGRAPHY_SIZE_VALUES,
+} from "../lib/utility-classification.ts";
+
+// Re-export for backwards compatibility with tests
+export { TYPOGRAPHY_PREFIXES };
 
 // ============================================================================
 // Error Types
@@ -28,6 +39,7 @@ export interface FindOptions {
   quiet?: boolean;
   colors?: boolean;
   spacing?: boolean;
+  typography?: boolean;
   patterns?: boolean;
   tokens?: boolean;
   cascade?: string;
@@ -54,6 +66,16 @@ interface ColorUsageResult {
 }
 
 interface SpacingUsageResult {
+  values: Array<{ value: string; count: number }>;
+  utilities: Array<{ utility: string; count: number }>;
+  categories: {
+    tokenized: number;
+    arbitrary: number;
+    scale: number;
+  };
+}
+
+interface TypographyUsageResult {
   values: Array<{ value: string; count: number }>;
   utilities: Array<{ utility: string; count: number }>;
   categories: {
@@ -97,27 +119,17 @@ interface CascadeResult {
 const DEFAULT_LIMIT = 10;
 const DEFAULT_SIMILARITY_THRESHOLD = 0.8;
 
-const SPACING_PREFIXES = [
-  "space-x",
-  "space-y",
-  "gap-x",
-  "gap-y",
-  "px",
-  "py",
-  "pt",
-  "pr",
-  "pb",
-  "pl",
-  "mx",
-  "my",
-  "mt",
-  "mr",
-  "mb",
-  "ml",
-  "p",
-  "m",
-  "gap",
-];
+function isTypographyTextValue(value: string): boolean {
+  if (TYPOGRAPHY_SIZE_VALUES.has(value)) {
+    return true;
+  }
+
+  if (value.startsWith("[") || value.startsWith("(--")) {
+    return true;
+  }
+
+  return false;
+}
 
 function normalizePath(path: string): string {
   return path.replace(/\\/g, "/");
@@ -185,6 +197,42 @@ function parseColorUtility(className: string): { utility: string; value: string 
   }
 
   return { utility: match[1], value: match[2] };
+}
+
+export function parseTypographyUtility(
+  className: string
+): { utility: string; value: string } | null {
+  const utility = getUtilitySegment(className);
+
+  for (const prefix of TYPOGRAPHY_PREFIXES) {
+    if (!utility.startsWith(`${prefix}-`)) {
+      continue;
+    }
+
+    const value = utility.slice(prefix.length + 1);
+
+    if (prefix === "text") {
+      if (!isTypographyTextValue(value)) {
+        return null;
+      }
+    } else if (prefix === "font") {
+      if (!FONT_WEIGHT_VALUES.has(value) && !value.startsWith("[") && !value.startsWith("(--")) {
+        return null;
+      }
+    } else if (prefix === "leading") {
+      if (!LEADING_VALUES.has(value) && !value.startsWith("[") && !value.startsWith("(--")) {
+        return null;
+      }
+    } else if (prefix === "tracking") {
+      if (!TRACKING_VALUES.has(value) && !value.startsWith("[") && !value.startsWith("(--")) {
+        return null;
+      }
+    }
+
+    return { utility: prefix, value };
+  }
+
+  return null;
 }
 
 function resolveClassToToken(className: string): string | null {
@@ -359,6 +407,44 @@ function buildSpacingUsage(classStats: ClassStat[]): SpacingUsageResult {
     if (spacing.value.includes("--")) {
       categories.tokenized += stat.count;
     } else if (spacing.value.includes("[")) {
+      categories.arbitrary += stat.count;
+    } else {
+      categories.scale += stat.count;
+    }
+  }
+
+  const valuesList = Array.from(values.entries())
+    .map(([value, count]) => ({ value, count }))
+    .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+
+  const utilitiesList = Array.from(utilities.entries())
+    .map(([utility, count]) => ({ utility, count }))
+    .sort((a, b) => b.count - a.count || a.utility.localeCompare(b.utility));
+
+  return {
+    values: valuesList,
+    utilities: utilitiesList,
+    categories,
+  };
+}
+
+export function buildTypographyUsage(classStats: ClassStat[]): TypographyUsageResult {
+  const values = new Map<string, number>();
+  const utilities = new Map<string, number>();
+  const categories = { tokenized: 0, arbitrary: 0, scale: 0 };
+
+  for (const stat of classStats) {
+    const typography = parseTypographyUtility(stat.className);
+    if (!typography) {
+      continue;
+    }
+
+    values.set(typography.value, (values.get(typography.value) ?? 0) + stat.count);
+    utilities.set(typography.utility, (utilities.get(typography.utility) ?? 0) + stat.count);
+
+    if (typography.value.startsWith("(--")) {
+      categories.tokenized += stat.count;
+    } else if (typography.value.startsWith("[")) {
       categories.arbitrary += stat.count;
     } else {
       categories.scale += stat.count;
@@ -660,6 +746,7 @@ export async function find(options: FindOptions = {}): Promise<FindResult> {
   const modes = [
     { key: "colors", active: options.colors === true },
     { key: "spacing", active: options.spacing === true },
+    { key: "typography", active: options.typography === true },
     { key: "patterns", active: options.patterns === true },
     { key: "tokens", active: options.tokens === true },
     { key: "cascade", active: Boolean(options.cascade) },
@@ -670,7 +757,7 @@ export async function find(options: FindOptions = {}): Promise<FindResult> {
     return {
       success: false,
       message:
-        "Select a finder: --colors, --spacing, --patterns, --tokens, --cascade, or --similar",
+        "Select a finder: --colors, --spacing, --typography, --patterns, --tokens, --cascade, or --similar",
       error: new FindError("No finder option provided."),
     };
   }
@@ -758,6 +845,39 @@ export async function find(options: FindOptions = {}): Promise<FindResult> {
       }
 
       return { success: true, message: "Spacing usage reported" };
+    }
+
+    if (mode === "typography") {
+      const classStats = getClassStats(indexDb);
+      const result = buildTypographyUsage(classStats);
+
+      if (options.json) {
+        console.log(JSON.stringify({ kind: "typography", ...result }, null, 2));
+      } else if (!quiet) {
+        console.log(chalk.bold("Typography usage\n"));
+        console.log(chalk.dim("Top values:"));
+        for (const line of formatCountList(
+          result.values.map((item) => ({ label: item.value, count: item.count })),
+          clampLimit(options.limit)
+        )) {
+          console.log(line);
+        }
+
+        console.log(chalk.dim("\nUtilities:"));
+        for (const line of formatCountList(
+          result.utilities.map((item) => ({ label: item.utility, count: item.count })),
+          clampLimit(options.limit)
+        )) {
+          console.log(line);
+        }
+
+        console.log(chalk.dim("\nCategories:"));
+        console.log(`  tokenized: ${result.categories.tokenized}`);
+        console.log(`  scale: ${result.categories.scale}`);
+        console.log(`  arbitrary: ${result.categories.arbitrary}`);
+      }
+
+      return { success: true, message: "Typography usage reported" };
     }
 
     if (mode === "patterns") {

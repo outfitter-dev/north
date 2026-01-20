@@ -4,6 +4,10 @@ import { glob } from "glob";
 import { minimatch } from "minimatch";
 import { findConfigFile, loadConfig } from "../config/loader.ts";
 import type { NorthConfig } from "../config/schema.ts";
+import {
+  isArbitraryColorUtility,
+  isArbitraryValueViolation,
+} from "../lib/utility-classification.ts";
 import { isIssueCoveredByDeviation, parseCandidates, parseDeviations } from "./comments.ts";
 import { getContext } from "./context.ts";
 import { extractClassTokens, extractComponentDefinitions } from "./extract.ts";
@@ -130,65 +134,6 @@ function resolveBuiltinRuleConfig(
   }
 
   return { level: defaultLevel, options: {} };
-}
-
-function splitByDelimiter(input: string, delimiter: string): string[] {
-  const parts: string[] = [];
-  let current = "";
-  let bracketDepth = 0;
-  let parenDepth = 0;
-
-  for (let i = 0; i < input.length; i += 1) {
-    const char = input[i];
-
-    if (char === "[") {
-      bracketDepth += 1;
-    } else if (char === "]") {
-      bracketDepth = Math.max(0, bracketDepth - 1);
-    } else if (char === "(") {
-      parenDepth += 1;
-    } else if (char === ")") {
-      parenDepth = Math.max(0, parenDepth - 1);
-    }
-
-    if (char === delimiter && bracketDepth === 0 && parenDepth === 0) {
-      parts.push(current);
-      current = "";
-      continue;
-    }
-
-    current += char;
-  }
-
-  parts.push(current);
-  return parts;
-}
-
-function getUtilitySegment(className: string): string {
-  const parts = splitByDelimiter(className, ":");
-  return parts[parts.length - 1] ?? className;
-}
-
-function isArbitraryColorUtility(className: string): boolean {
-  const utility = getUtilitySegment(className);
-  return /^(bg|text|border|ring|fill|stroke)-\[(#|rgb|rgba|hsl|hsla|oklch|lab|lch)/.test(utility);
-}
-
-function isArbitraryValueViolation(className: string): boolean {
-  const utility = getUtilitySegment(className);
-  if (!utility.includes("[")) {
-    return false;
-  }
-
-  if (!utility.includes("]")) {
-    return false;
-  }
-
-  if (utility.includes("var(--")) {
-    return false;
-  }
-
-  return true;
 }
 
 function isFileIgnoredForRule(rule: LoadedRule, filePath: string): boolean {

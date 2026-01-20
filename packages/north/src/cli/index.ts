@@ -148,6 +148,7 @@ program
   .option("-c, --config <path>", "Path to config file")
   .option("--colors", "Color usage report")
   .option("--spacing", "Spacing usage report")
+  .option("--typography", "Typography usage report")
   .option("--patterns", "Repeated class patterns")
   .option("--tokens", "Token usage report")
   .option("--cascade <selector>", "Cascade debugger for selector or token")
@@ -164,6 +165,7 @@ program
       quiet: options.quiet,
       colors: options.colors,
       spacing: options.spacing,
+      typography: options.typography,
       patterns: options.patterns,
       tokens: options.tokens,
       cascade: options.cascade,
