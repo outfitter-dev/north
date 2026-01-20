@@ -14,6 +14,7 @@ import { getGuidance, registerStatusTool } from "./tools/index.ts";
 import { registerPromoteTool } from "./tools/promote.ts";
 import { registerQueryTool } from "./tools/query.ts";
 import { registerRefactorTool } from "./tools/refactor.ts";
+import { registerSuggestTool } from "./tools/suggest.ts";
 import type { ServerState } from "./types.ts";
 
 // Re-export getGuidance for backward compatibility with tests
@@ -161,6 +162,7 @@ function registerTools(server: McpServer): void {
   // Tier 2: Config-dependent tools
   registerContextTool(server);
   registerCheckTool(server);
+  registerSuggestTool(server);
 
   // Tier 3: Index-dependent tools
   registerDiscoverTool(server);

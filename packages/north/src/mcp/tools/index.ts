@@ -28,6 +28,17 @@ export {
 // Context tool (Tier 2)
 export { registerContextTool, executeContextTool, type ContextPayload } from "./context.ts";
 
+// Suggest tool (Tier 2)
+export {
+  type SuggestInput,
+  SuggestInputSchema,
+  type SuggestOptions,
+  type SuggestResponse,
+  type TokenSuggestion,
+  executeSuggestTool,
+  registerSuggestTool,
+} from "./suggest.ts";
+
 // Discover tool (Tier 3)
 export {
   type DiscoverInput,

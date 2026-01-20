@@ -75,7 +75,7 @@ export const OKLCHColorSchema = z
 
 export type OKLCHColor = z.infer<typeof OKLCHColorSchema>;
 
-// shadcn color mapping
+// shadcn color mapping with support for custom semantic tokens
 export const ColorsConfigSchema = z
   .object({
     background: OKLCHColorSchema.optional(),
@@ -98,6 +98,8 @@ export const ColorsConfigSchema = z
     input: OKLCHColorSchema.optional(),
     ring: OKLCHColorSchema.optional(),
   })
+  // Allow custom semantic tokens (e.g., success, warning) beyond the standard shadcn set
+  .catchall(OKLCHColorSchema)
   .optional();
 
 export type ColorsConfig = z.infer<typeof ColorsConfigSchema>;
