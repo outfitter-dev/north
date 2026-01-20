@@ -92,6 +92,45 @@ function adjustSeverityForContext(
   return severity;
 }
 
+interface BuiltinRuleConfig {
+  level: RuleSeverity;
+  options: Record<string, unknown>;
+}
+
+/**
+ * Resolve configuration for built-in rules (not loaded from YAML files).
+ * Returns the configured level and any rule-specific options.
+ */
+function resolveBuiltinRuleConfig(
+  config: NorthConfig,
+  ruleKey: string,
+  defaultLevel: RuleSeverity
+): BuiltinRuleConfig {
+  const rulesConfig = config.rules;
+  if (!rulesConfig) {
+    return { level: defaultLevel, options: {} };
+  }
+
+  const value = rulesConfig[ruleKey as keyof typeof rulesConfig];
+  if (!value) {
+    return { level: defaultLevel, options: {} };
+  }
+
+  // Handle string level (e.g., "off", "warn", "error")
+  if (typeof value === "string") {
+    return { level: value as RuleSeverity, options: {} };
+  }
+
+  // Handle object config (e.g., { level: "warn", "max-classes": 10 })
+  if (typeof value === "object") {
+    const level = "level" in value && value.level ? (value.level as RuleSeverity) : defaultLevel;
+    const { level: _level, ignore: _ignore, ...options } = value as Record<string, unknown>;
+    return { level, options };
+  }
+
+  return { level: defaultLevel, options: {} };
+}
+
 function splitByDelimiter(input: string, delimiter: string): string[] {
   const parts: string[] = [];
   let current = "";
@@ -299,6 +338,78 @@ function buildNonLiteralIssues(sites: ExtractionResult["nonLiteralSites"]): Lint
   }));
 }
 
+// Color properties that should not have literal values in inline styles
+const COLOR_PROPERTIES = [
+  "color",
+  "backgroundColor",
+  "borderColor",
+  "borderTopColor",
+  "borderRightColor",
+  "borderBottomColor",
+  "borderLeftColor",
+  "outlineColor",
+  "fill",
+  "stroke",
+];
+
+// Pattern to match color literals (hex, rgb, rgba, hsl, hsla, named colors, oklch, lab, lch)
+const COLOR_LITERAL_PATTERN =
+  /(['"])(#[0-9a-fA-F]{3,8}|rgb\([^)]+\)|rgba\([^)]+\)|hsl\([^)]+\)|hsla\([^)]+\)|oklch\([^)]+\)|lab\([^)]+\)|lch\([^)]+\)|red|blue|green|yellow|orange|purple|pink|cyan|magenta|black|white|gray|grey)\1/i;
+
+/**
+ * Scan source code for inline style attributes with literal color values.
+ * Returns issues for each violation of the no-inline-color rule.
+ */
+function scanInlineColorStyles(source: string, filePath: string, config: NorthConfig): LintIssue[] {
+  const ruleConfig = resolveBuiltinRuleConfig(config, "no-inline-color", "error");
+
+  // Skip if rule is disabled
+  if (ruleConfig.level === "off") {
+    return [];
+  }
+
+  const issues: LintIssue[] = [];
+
+  // Match style={{ ... }} patterns
+  const stylePattern = /style\s*=\s*\{\s*\{([^}]*)\}\s*\}/g;
+
+  for (const match of source.matchAll(stylePattern)) {
+    const styleContent = match[1] ?? "";
+    const styleStartIndex = match.index ?? 0;
+    const styleLine = source.slice(0, styleStartIndex).split("\n").length;
+
+    // Check each color property
+    for (const prop of COLOR_PROPERTIES) {
+      // Match property: value patterns
+      const propPattern = new RegExp(`${prop}\\s*:\\s*([^,}]+)`, "gi");
+      for (const propMatch of styleContent.matchAll(propPattern)) {
+        const value = propMatch[1]?.trim() ?? "";
+
+        // Skip if value is a CSS variable
+        if (value.includes("var(--")) {
+          continue;
+        }
+
+        // Check if value contains a color literal
+        if (COLOR_LITERAL_PATTERN.test(value)) {
+          issues.push({
+            ruleId: "north/no-inline-color",
+            ruleKey: "no-inline-color",
+            severity: ruleConfig.level as Exclude<RuleSeverity, "off">,
+            message: `Use CSS variables instead of inline color literal for ${prop}`,
+            filePath,
+            line: styleLine,
+            column: 1,
+            note: `Found: ${prop}: ${value}\nUse: ${prop}: 'var(--your-token)' or a Tailwind class instead`,
+          });
+        }
+      }
+    }
+  }
+
+  return issues;
+}
+
 export async function runLint(options: LintOptions = {}): Promise<LintRun> {
   const cwd = options.cwd ?? process.cwd();
   const { config, configPath } = await loadProjectConfig(cwd, options.configPath);
@@ -341,6 +452,9 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
         }
 
         rawIssues.push(...buildNonLiteralIssues(extraction.nonLiteralSites));
+
+        // Scan for inline style color violations
+        rawIssues.push(...scanInlineColorStyles(source, displayPath, config));
       }
     } catch (error) {
       rawIssues.push({
