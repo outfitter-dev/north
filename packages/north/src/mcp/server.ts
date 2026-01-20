@@ -8,6 +8,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { registerCheckTool } from "./tools/check.ts";
+import { registerClassifyTool } from "./tools/classify-tool.ts";
 import { registerContextTool } from "./tools/context.ts";
 import { registerDiscoverTool } from "./tools/discover.ts";
 import {
@@ -154,6 +155,13 @@ export const TIERED_TOOLS: TieredTool[] = [
       "usages, and the token graph.",
     tier: 3,
   },
+  {
+    name: "north_classify",
+    description:
+      "Classify component files by context (primitive, composed, layout). " +
+      "Enables context-aware linting rules with different complexity thresholds.",
+    tier: 3,
+  },
 ];
 
 /**
@@ -194,6 +202,7 @@ function registerTools(server: McpServer): void {
   registerPromoteTool(server);
   registerQueryTool(server);
   registerRefactorTool(server);
+  registerClassifyTool(server);
 }
 
 // ============================================================================
