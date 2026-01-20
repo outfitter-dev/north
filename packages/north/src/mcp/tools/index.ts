@@ -8,6 +8,18 @@
 export { executeStatusTool, getGuidance, registerStatusTool } from "./status.ts";
 export type { StatusResponse } from "./status.ts";
 
+// Check tool (Tier 2)
+export {
+  type CheckInput,
+  CheckInputSchema,
+  type CheckOptions,
+  type CheckResponse,
+  type CheckViolation,
+  type FixSuggestion,
+  executeCheckTool,
+  registerCheckTool,
+} from "./check.ts";
+
 // Context tool (Tier 2)
 export { registerContextTool, executeContextTool, type ContextPayload } from "./context.ts";
 
