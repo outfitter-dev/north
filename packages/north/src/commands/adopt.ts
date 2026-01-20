@@ -7,10 +7,7 @@
 import chalk from "chalk";
 import { type IndexDatabase, openIndexDatabase } from "../index/db.ts";
 import { checkIndexFresh, getIndexStatus } from "../index/queries.ts";
-import {
-  categorizePattern,
-  getUtilitySegment,
-} from "../lib/utility-classification.ts";
+import { categorizePattern, getUtilitySegment } from "../lib/utility-classification.ts";
 
 // Re-export for backwards compatibility with existing API
 export { categorizePattern } from "../lib/utility-classification.ts";
