@@ -683,6 +683,113 @@ export async function executeDiscoverTool(
 // Tool Registration
 // ============================================================================
 
+const DISCOVER_DESCRIPTION =
+  "Discover token usage patterns in the codebase. Find where tokens are used, " +
+  "explore cascade chains, and understand token dependencies. " +
+  "Modes: colors, spacing, typography, patterns, tokens, cascade, similar. " +
+  "Cascade and similar modes require a selector parameter.";
+
+/**
+ * Create the handler for north_discover and its alias north_find.
+ */
+function createDiscoverHandler() {
+  return async (args: unknown) => {
+    const cwd = process.cwd();
+
+    // Validate input
+    const parseResult = DiscoverInputSchema.safeParse(args);
+    if (!parseResult.success) {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(
+              {
+                success: false,
+                error: "Invalid input parameters",
+                details: parseResult.error.issues,
+              },
+              null,
+              2
+            ),
+          },
+        ],
+        isError: true,
+      };
+    }
+
+    const input = parseResult.data;
+    const workingDir = input.cwd ?? cwd;
+
+    // Check context state - this tool requires indexed state
+    const ctx = await detectContext(workingDir);
+    if (ctx.state !== "indexed") {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(
+              {
+                success: false,
+                error: ctx.state === "none" ? "No North configuration found" : "Index not built",
+                guidance:
+                  ctx.state === "none"
+                    ? [
+                        "Run 'north init' to initialize the project.",
+                        "Then run 'north index' to build the index.",
+                      ]
+                    : ["Run 'north index' to build the token index."],
+              },
+              null,
+              2
+            ),
+          },
+        ],
+        isError: true,
+      };
+    }
+
+    try {
+      const configPath = ctx.configPath as string;
+      const payload = await executeDiscoverTool(workingDir, configPath, {
+        mode: input.mode,
+        selector: input.selector,
+        threshold: input.threshold,
+        limit: input.limit,
+        format: input.format,
+      });
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(payload, null, 2),
+          },
+        ],
+        isError: !payload.success,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(
+              {
+                success: false,
+                error: message,
+              },
+              null,
+              2
+            ),
+          },
+        ],
+        isError: true,
+      };
+    }
+  };
+}
+
 /**
  * Register the north_discover tool with the MCP server.
  *
@@ -692,106 +799,22 @@ export function registerDiscoverTool(server: McpServer): void {
   server.registerTool(
     "north_discover",
     {
-      description:
-        "Discover token usage patterns in the codebase. Find where tokens are used, " +
-        "explore cascade chains, and understand token dependencies. " +
-        "Modes: colors, spacing, typography, patterns, tokens, cascade, similar. " +
-        "Cascade and similar modes require a selector parameter.",
+      description: DISCOVER_DESCRIPTION,
     },
-    async (args: unknown) => {
-      const cwd = process.cwd();
+    createDiscoverHandler()
+  );
+}
 
-      // Validate input
-      const parseResult = DiscoverInputSchema.safeParse(args);
-      if (!parseResult.success) {
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(
-                {
-                  success: false,
-                  error: "Invalid input parameters",
-                  details: parseResult.error.issues,
-                },
-                null,
-                2
-              ),
-            },
-          ],
-          isError: true,
-        };
-      }
-
-      const input = parseResult.data;
-      const workingDir = input.cwd ?? cwd;
-
-      // Check context state - this tool requires indexed state
-      const ctx = await detectContext(workingDir);
-      if (ctx.state !== "indexed") {
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(
-                {
-                  success: false,
-                  error: ctx.state === "none" ? "No North configuration found" : "Index not built",
-                  guidance:
-                    ctx.state === "none"
-                      ? [
-                          "Run 'north init' to initialize the project.",
-                          "Then run 'north index' to build the index.",
-                        ]
-                      : ["Run 'north index' to build the token index."],
-                },
-                null,
-                2
-              ),
-            },
-          ],
-          isError: true,
-        };
-      }
-
-      try {
-        const configPath = ctx.configPath as string;
-        const payload = await executeDiscoverTool(workingDir, configPath, {
-          mode: input.mode,
-          selector: input.selector,
-          threshold: input.threshold,
-          limit: input.limit,
-          format: input.format,
-        });
-
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(payload, null, 2),
-            },
-          ],
-          isError: !payload.success,
-        };
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(
-                {
-                  success: false,
-                  error: message,
-                },
-                null,
-                2
-              ),
-            },
-          ],
-          isError: true,
-        };
-      }
-    }
+/**
+ * Register the north_find alias for north_discover.
+ * This matches the 'north find' CLI command for discoverability.
+ */
+export function registerDiscoverAlias(server: McpServer): void {
+  server.registerTool(
+    "north_find",
+    {
+      description: `${DISCOVER_DESCRIPTION} (Alias for north_discover, matches 'north find' CLI command.)`,
+    },
+    createDiscoverHandler()
   );
 }

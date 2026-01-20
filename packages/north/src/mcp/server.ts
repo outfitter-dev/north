@@ -10,7 +10,12 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { registerCheckTool } from "./tools/check.ts";
 import { registerContextTool } from "./tools/context.ts";
 import { registerDiscoverTool } from "./tools/discover.ts";
-import { getGuidance, registerStatusTool } from "./tools/index.ts";
+import {
+  getGuidance,
+  registerDiscoverAlias,
+  registerStatusAlias,
+  registerStatusTool,
+} from "./tools/index.ts";
 import { registerPromoteTool } from "./tools/promote.ts";
 import { registerQueryTool } from "./tools/query.ts";
 import { registerRefactorTool } from "./tools/refactor.ts";
@@ -66,6 +71,14 @@ export interface TieredTool {
   tier: 1 | 2 | 3;
 }
 
+// CLI parity aliases for discoverability (#86)
+// These aliases match the CLI command names:
+// | MCP Tool (primary) | MCP Alias | CLI Command |
+// |--------------------|-----------|-------------|
+// | north_discover | north_find | north find |
+// | north_status | north_doctor | north doctor |
+// | north_check | (none) | north check |
+
 /**
  * All North MCP tools with their tier assignments.
  */
@@ -76,6 +89,11 @@ export const TIERED_TOOLS: TieredTool[] = [
     description:
       "Get North design system status. Returns current state (none/config/indexed), " +
       "available capabilities, and guidance on next steps.",
+    tier: 1,
+  },
+  {
+    name: "north_doctor",
+    description: "Alias for north_status. Matches 'north doctor' CLI command for discoverability.",
     tier: 1,
   },
 
@@ -108,6 +126,11 @@ export const TIERED_TOOLS: TieredTool[] = [
     description:
       "Discover token usage patterns in the codebase. Find where tokens are used, " +
       "explore cascade chains, and understand token dependencies.",
+    tier: 3,
+  },
+  {
+    name: "north_find",
+    description: "Alias for north_discover. Matches 'north find' CLI command for discoverability.",
     tier: 3,
   },
   {
@@ -158,6 +181,7 @@ export function getToolsForState(state: ServerState): TieredTool[] {
 function registerTools(server: McpServer): void {
   // Tier 1: Always available
   registerStatusTool(server);
+  registerStatusAlias(server); // north_doctor alias
 
   // Tier 2: Config-dependent tools
   registerContextTool(server);
@@ -166,6 +190,7 @@ function registerTools(server: McpServer): void {
 
   // Tier 3: Index-dependent tools
   registerDiscoverTool(server);
+  registerDiscoverAlias(server); // north_find alias
   registerPromoteTool(server);
   registerQueryTool(server);
   registerRefactorTool(server);
