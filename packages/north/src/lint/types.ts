@@ -2,6 +2,19 @@ export type RuleSeverity = "error" | "warn" | "info" | "off";
 
 export type LintContext = "primitive" | "composed" | "layout";
 
+// ============================================================================
+// Deviation Types
+// ============================================================================
+
+export interface Deviation {
+  rule: string;
+  reason: string;
+  ticket?: string;
+  count: number;
+  line: number;
+  filePath: string;
+}
+
 export interface LoadedRule {
   id: string;
   key: string;
@@ -46,6 +59,7 @@ export interface LintReport {
   issues: LintIssue[];
   stats: LintStats;
   rules: LoadedRule[];
+  deviations: Deviation[];
 }
 
 export interface ClassToken {

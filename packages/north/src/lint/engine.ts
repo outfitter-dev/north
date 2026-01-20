@@ -4,11 +4,13 @@ import { glob } from "glob";
 import { minimatch } from "minimatch";
 import { findConfigFile, loadConfig } from "../config/loader.ts";
 import type { NorthConfig } from "../config/schema.ts";
+import { isIssueCoveredByDeviation, parseDeviations } from "./comments.ts";
 import { extractClassTokens } from "./extract.ts";
 import { getIgnorePatterns } from "./ignores.ts";
 import { loadRules } from "./rules.ts";
 import type {
   ClassToken,
+  Deviation,
   ExtractionResult,
   LintIssue,
   LintReport,
@@ -293,7 +295,8 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
 
   const files = await listFiles(cwd, config, options.files);
   const extractionResults: ExtractionResult[] = [];
-  const issues: LintIssue[] = [];
+  const rawIssues: LintIssue[] = [];
+  const allDeviations: Deviation[] = [];
 
   for (const file of files) {
     const displayPath = relative(cwd, file) || file;
@@ -305,20 +308,24 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
 
       extractionResults.push(extraction);
 
+      // Parse deviations from this file
+      const fileDeviations = parseDeviations(source, displayPath);
+      allDeviations.push(...fileDeviations);
+
       if (options.collectIssues !== false) {
         for (const token of extraction.tokens) {
           for (const rule of rules) {
             const issue = evaluateRule(rule, token);
             if (issue) {
-              issues.push(issue);
+              rawIssues.push(issue);
             }
           }
         }
 
-        issues.push(...buildNonLiteralIssues(extraction.nonLiteralSites));
+        rawIssues.push(...buildNonLiteralIssues(extraction.nonLiteralSites));
       }
     } catch (error) {
-      issues.push({
+      rawIssues.push({
         ruleId: "north/parse-error",
         ruleKey: "parse-error",
         severity: "error",
@@ -330,6 +337,12 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
     }
   }
 
+  // Filter out issues covered by deviations
+  const issues = rawIssues.filter((issue) => {
+    const fileDeviations = allDeviations.filter((d) => d.filePath === issue.filePath);
+    return !isIssueCoveredByDeviation(issue.ruleKey, issue.line, fileDeviations);
+  });
+
   const stats = computeStats(extractionResults, files.length);
   const sortedIssues = sortIssues(issues);
   const summary = createSummary(sortedIssues);
@@ -340,6 +353,7 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
       issues: sortedIssues,
       stats,
       rules,
+      deviations: allDeviations,
     },
     configPath,
   };
