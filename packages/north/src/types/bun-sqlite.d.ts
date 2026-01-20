@@ -28,5 +28,6 @@ declare module "bun:sqlite" {
       lastInsertRowid: number | bigint;
     };
     close(): void;
+    transaction<T>(fn: () => T): () => T;
   }
 }
