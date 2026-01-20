@@ -8,6 +8,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { getGuidance, registerStatusTool } from "./tools/index.ts";
+import { registerContextTool } from "./tools/context.ts";
 import type { ServerState } from "./types.ts";
 
 // Re-export getGuidance for backward compatibility with tests
@@ -152,7 +153,10 @@ function registerTools(server: McpServer): void {
   // Tier 1: Always available
   registerStatusTool(server);
 
-  // Tier 2 and 3 tools will be added in future commits
+  // Tier 2: Config-dependent tools
+  registerContextTool(server);
+
+  // Tier 3 tools will be added in future commits
 }
 
 // ============================================================================
