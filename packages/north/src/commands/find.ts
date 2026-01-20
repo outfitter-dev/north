@@ -2,17 +2,33 @@ import { relative, resolve } from "node:path";
 import chalk from "chalk";
 import { type IndexDatabase, openIndexDatabase } from "../index/db.ts";
 import { checkIndexFresh, getIndexStatus } from "../index/queries.ts";
+import { featureAvailable, getSchemaVersion } from "../index/version-guard.ts";
 import {
   FONT_WEIGHT_VALUES,
   LEADING_VALUES,
   SPACING_PREFIXES,
   TRACKING_VALUES,
-  TYPOGRAPHY_PREFIXES,
+  TYPOGRAPHY_PREFIXES as TYPOGRAPHY_PREFIXES_BASE,
   TYPOGRAPHY_SIZE_VALUES,
+  extractVarColorToken,
+  isColorLiteralValue,
+  parseColorUtility,
+  parseSpacingUtility,
+  parseTypographyUtility as parseTypographyUtilityBase,
+  resolveClassToToken,
 } from "../lib/utility-classification.ts";
 
-// Re-export for backwards compatibility with tests
-export { TYPOGRAPHY_PREFIXES };
+// Re-export for backwards compatibility
+export const TYPOGRAPHY_PREFIXES = TYPOGRAPHY_PREFIXES_BASE;
+
+// Adapter to maintain existing API that uses { utility, value } instead of { prefix, value }
+export function parseTypographyUtility(
+  className: string
+): { utility: string; value: string } | null {
+  const result = parseTypographyUtilityBase(className);
+  if (!result) return null;
+  return { utility: result.prefix, value: result.value };
+}
 
 // ============================================================================
 // Error Types
@@ -107,6 +123,11 @@ interface SimilarityResult {
   sharedTokens: string[];
 }
 
+interface ThemeVariantValue {
+  resolved: string;
+  source: string;
+}
+
 interface CascadeResult {
   selector: string;
   className?: string;
@@ -114,143 +135,17 @@ interface CascadeResult {
   tokenDefinition?: { name: string; value: string; file: string; line: number };
   tokenChain: Array<{ ancestor: string; depth: number; path: string[] }>;
   usages: Array<{ file: string; line: number; column: number; className: string | null }>;
+  themeVariants?: {
+    light?: ThemeVariantValue;
+    dark?: ThemeVariantValue;
+  };
 }
 
 const DEFAULT_LIMIT = 10;
 const DEFAULT_SIMILARITY_THRESHOLD = 0.8;
 
-function isTypographyTextValue(value: string): boolean {
-  if (TYPOGRAPHY_SIZE_VALUES.has(value)) {
-    return true;
-  }
-
-  if (value.startsWith("[") || value.startsWith("(--")) {
-    return true;
-  }
-
-  return false;
-}
-
 function normalizePath(path: string): string {
   return path.replace(/\\/g, "/");
-}
-
-function splitByDelimiter(input: string, delimiter: string): string[] {
-  const parts: string[] = [];
-  let current = "";
-  let bracketDepth = 0;
-  let parenDepth = 0;
-
-  for (let i = 0; i < input.length; i += 1) {
-    const char = input[i];
-    if (!char) {
-      continue;
-    }
-
-    if (char === "[") {
-      bracketDepth += 1;
-    } else if (char === "]") {
-      bracketDepth = Math.max(0, bracketDepth - 1);
-    } else if (char === "(") {
-      parenDepth += 1;
-    } else if (char === ")") {
-      parenDepth = Math.max(0, parenDepth - 1);
-    }
-
-    if (char === delimiter && bracketDepth === 0 && parenDepth === 0) {
-      parts.push(current);
-      current = "";
-      continue;
-    }
-
-    current += char;
-  }
-
-  parts.push(current);
-  return parts;
-}
-
-function getUtilitySegment(className: string): string {
-  const parts = splitByDelimiter(className, ":");
-  return parts[parts.length - 1] ?? className;
-}
-
-function parseSpacingUtility(className: string): { utility: string; value: string } | null {
-  const utility = getUtilitySegment(className);
-  for (const prefix of SPACING_PREFIXES) {
-    if (utility.startsWith(`${prefix}-`)) {
-      return {
-        utility: prefix,
-        value: utility.slice(prefix.length + 1),
-      };
-    }
-  }
-
-  return null;
-}
-
-function parseColorUtility(className: string): { utility: string; value: string } | null {
-  const utility = getUtilitySegment(className);
-  const match = utility.match(/^(bg|text|border|ring|fill|stroke)-(.+)$/);
-  if (!match?.[1] || !match?.[2]) {
-    return null;
-  }
-
-  return { utility: match[1], value: match[2] };
-}
-
-export function parseTypographyUtility(
-  className: string
-): { utility: string; value: string } | null {
-  const utility = getUtilitySegment(className);
-
-  for (const prefix of TYPOGRAPHY_PREFIXES) {
-    if (!utility.startsWith(`${prefix}-`)) {
-      continue;
-    }
-
-    const value = utility.slice(prefix.length + 1);
-
-    if (prefix === "text") {
-      if (!isTypographyTextValue(value)) {
-        return null;
-      }
-    } else if (prefix === "font") {
-      if (!FONT_WEIGHT_VALUES.has(value) && !value.startsWith("[") && !value.startsWith("(--")) {
-        return null;
-      }
-    } else if (prefix === "leading") {
-      if (!LEADING_VALUES.has(value) && !value.startsWith("[") && !value.startsWith("(--")) {
-        return null;
-      }
-    } else if (prefix === "tracking") {
-      if (!TRACKING_VALUES.has(value) && !value.startsWith("[") && !value.startsWith("(--")) {
-        return null;
-      }
-    }
-
-    return { utility: prefix, value };
-  }
-
-  return null;
-}
-
-function resolveClassToToken(className: string): string | null {
-  const utility = getUtilitySegment(className);
-
-  const shorthandMatch = utility.match(/^[A-Za-z-]+-\((--[A-Za-z0-9-_]+)\)$/);
-  if (shorthandMatch?.[1]) {
-    return shorthandMatch[1];
-  }
-
-  const colorMatch = utility.match(
-    /^(bg|text|border|ring|fill|stroke)-([A-Za-z0-9-_]+)(?:\/[\d.]+)?$/
-  );
-  if (colorMatch?.[2]) {
-    return `--color-${colorMatch[2]}`;
-  }
-
-  return null;
 }
 
 function jaccardSimilarity(left: Set<string>, right: Set<string>): number {
@@ -320,29 +215,6 @@ function getColorTokenSet(db: IndexDatabase): Set<string> {
   return new Set(rows.map((row) => row.name));
 }
 
-const RAW_COLOR_VALUES = new Set(["transparent", "current", "black", "white"]);
-const PALETTE_VALUE_REGEX = /^[a-z-]+-\d{2,3}$/i;
-const VAR_COLOR_TOKEN_REGEX = /var\(\s*(--color-[A-Za-z0-9-_]+)\s*(?:,[^)]+)?\)/i;
-
-function isColorLiteralValue(value: string): boolean {
-  if (RAW_COLOR_VALUES.has(value)) {
-    return true;
-  }
-
-  if (value.startsWith("[")) {
-    const inner = value.slice(1, -1).toLowerCase();
-    return /#|rgb|rgba|hsl|hsla|oklch|lab|lch|color|var\(--/.test(inner);
-  }
-
-  return PALETTE_VALUE_REGEX.test(value);
-}
-
-function extractVarColorToken(value: string): string | null {
-  const inner = value.startsWith("[") ? value.slice(1, -1) : value;
-  const match = inner.match(VAR_COLOR_TOKEN_REGEX);
-  return match?.[1] ?? null;
-}
-
 function buildColorUsage(classStats: ClassStat[], colorTokens: Set<string>): ColorUsageResult {
   const resolved = new Map<string, number>();
   const unresolved = new Map<string, number>();
@@ -376,7 +248,7 @@ function buildColorUsage(classStats: ClassStat[], colorTokens: Set<string>): Col
       continue;
     }
 
-    const utility = `${colorUtility.utility}-${colorUtility.value}`;
+    const utility = `${colorUtility.prefix}-${colorUtility.value}`;
     unresolved.set(utility, (unresolved.get(utility) ?? 0) + stat.count);
   }
 
@@ -402,7 +274,7 @@ function buildSpacingUsage(classStats: ClassStat[]): SpacingUsageResult {
     }
 
     values.set(spacing.value, (values.get(spacing.value) ?? 0) + stat.count);
-    utilities.set(spacing.utility, (utilities.get(spacing.utility) ?? 0) + stat.count);
+    utilities.set(spacing.prefix, (utilities.get(spacing.prefix) ?? 0) + stat.count);
 
     if (spacing.value.includes("--")) {
       categories.tokenized += stat.count;
@@ -637,6 +509,9 @@ function buildCascade(db: IndexDatabase, selector: string, limit: number): Casca
       : trimmed;
   let resolvedToken: string | undefined;
 
+  // Check schema version for feature availability
+  const schemaVersion = getSchemaVersion(db);
+
   if (isTokenSelector) {
     resolvedToken = trimmed;
   } else if (className) {
@@ -725,6 +600,25 @@ function buildCascade(db: IndexDatabase, selector: string, limit: number): Casca
     }
   }
 
+  // Query theme variants for the resolved token (requires schema v2+)
+  let themeVariants: CascadeResult["themeVariants"];
+  if (resolvedToken && featureAvailable(schemaVersion, "tokenThemes")) {
+    const themeRows = db
+      .prepare("SELECT theme, value, source FROM token_themes WHERE token_name = ?")
+      .all(resolvedToken) as Array<{ theme: string; value: string; source: string }>;
+
+    if (themeRows.length > 0) {
+      themeVariants = {};
+      for (const row of themeRows) {
+        if (row.theme === "light") {
+          themeVariants.light = { resolved: row.value, source: row.source };
+        } else if (row.theme === "dark") {
+          themeVariants.dark = { resolved: row.value, source: row.source };
+        }
+      }
+    }
+  }
+
   return {
     selector: trimmed,
     className,
@@ -732,6 +626,7 @@ function buildCascade(db: IndexDatabase, selector: string, limit: number): Casca
     tokenDefinition,
     tokenChain,
     usages,
+    themeVariants,
   };
 }
 
@@ -1010,6 +905,18 @@ export async function find(options: FindOptions = {}): Promise<FindResult> {
           for (const usage of result.usages) {
             const classInfo = usage.className ? ` ${usage.className}` : "";
             console.log(`  - ${usage.file}:${usage.line}:${usage.column}${classInfo}`);
+          }
+        }
+
+        if (result.themeVariants) {
+          console.log(chalk.dim("\nTheme variants:"));
+          if (result.themeVariants.light) {
+            console.log(chalk.dim(`  light: ${result.themeVariants.light.resolved}`));
+            console.log(chalk.dim(`    source: ${result.themeVariants.light.source}`));
+          }
+          if (result.themeVariants.dark) {
+            console.log(chalk.dim(`  dark: ${result.themeVariants.dark.resolved}`));
+            console.log(chalk.dim(`    source: ${result.themeVariants.dark.source}`));
           }
         }
       }
