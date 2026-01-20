@@ -979,6 +979,15 @@ export async function find(options: FindOptions = {}): Promise<FindResult> {
             console.log(chalk.dim(`  - ${token}`));
           }
         }
+
+        // Display analysis limits
+        if (result.limits.confidence === "partial") {
+          console.log(chalk.dim("\nAnalysis limits:"));
+          console.log(chalk.yellow(`  Confidence: ${result.limits.confidence}`));
+          if (result.limits.missing && result.limits.missing.length > 0) {
+            console.log(chalk.dim(`  Missing: ${result.limits.missing.join(", ")}`));
+          }
+        }
       }
 
       return { success: true, message: "Cascade trace reported" };
