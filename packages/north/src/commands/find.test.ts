@@ -1,7 +1,12 @@
 import { Database } from "bun:sqlite";
 import { describe, expect, test } from "bun:test";
 import type { IndexDatabase } from "../index/db.ts";
-import { TYPOGRAPHY_PREFIXES, buildCascade, buildTypographyUsage, parseTypographyUtility } from "./find.ts";
+import {
+  TYPOGRAPHY_PREFIXES,
+  buildCascade,
+  buildTypographyUsage,
+  parseTypographyUtility,
+} from "./find.ts";
 
 describe("parseTypographyUtility", () => {
   test("parses text size utilities", () => {
@@ -174,7 +179,6 @@ describe("buildTypographyUsage", () => {
     expect(result.values[2]).toEqual({ value: "sm", count: 1 });
   });
 });
-
 
 function createTestDb(): IndexDatabase {
   const db = new Database(":memory:");
