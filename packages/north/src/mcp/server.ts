@@ -7,9 +7,8 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { findConfigFile } from "../config/loader.ts";
-import { getIndexStatus } from "../index/queries.ts";
-import type { NorthMcpContext, ServerState } from "./types.ts";
+import { detectContext } from "./state.ts";
+import type { ServerState } from "./types.ts";
 
 // ============================================================================
 // Server Configuration
@@ -42,31 +41,100 @@ If north_status shows state='none', suggest running 'north init' first.
 `;
 
 // ============================================================================
-// Context Detection
+// Tool Tiers
 // ============================================================================
 
 /**
- * Detect the current server state by checking for config and index files.
+ * Tool tier definition.
+ * - Tier 1: Always available (no config needed)
+ * - Tier 2: Requires config (north.config.yaml)
+ * - Tier 3: Requires index (.north/index.db)
  */
-async function detectContext(cwd: string): Promise<NorthMcpContext> {
-  const configPath = await findConfigFile(cwd);
+export interface TieredTool {
+  name: string;
+  description: string;
+  tier: 1 | 2 | 3;
+}
 
-  if (!configPath) {
-    return { state: "none", cwd };
+/**
+ * All North MCP tools with their tier assignments.
+ */
+export const TIERED_TOOLS: TieredTool[] = [
+  // Tier 1: Always available
+  {
+    name: "north_status",
+    description:
+      "Get North design system status. Returns current state (none/config/indexed), " +
+      "available capabilities, and guidance on next steps.",
+    tier: 1,
+  },
+
+  // Tier 2: Requires config
+  {
+    name: "north_context",
+    description:
+      "Get design system context for LLMs. Returns token catalog, semantic mappings, " +
+      "and component guidance for implementing UI features.",
+    tier: 2,
+  },
+  {
+    name: "north_check",
+    description:
+      "Lint files for design system violations. Reports issues like magic colors, " +
+      "inline spacing, and missing semantic tokens.",
+    tier: 2,
+  },
+  {
+    name: "north_suggest",
+    description:
+      "Suggest appropriate design tokens for a given use case. Helps find the right " +
+      "token for colors, spacing, typography, etc.",
+    tier: 2,
+  },
+
+  // Tier 3: Requires index
+  {
+    name: "north_discover",
+    description:
+      "Discover token usage patterns in the codebase. Find where tokens are used, " +
+      "explore cascade chains, and understand token dependencies.",
+    tier: 3,
+  },
+  {
+    name: "north_promote",
+    description:
+      "Promote a magic value to a design token. Analyzes usage, suggests token name, " +
+      "and provides implementation guidance.",
+    tier: 3,
+  },
+  {
+    name: "north_refactor",
+    description:
+      "Refactor code to use design tokens. Identifies candidates for token promotion " +
+      "and generates migration plans.",
+    tier: 3,
+  },
+  {
+    name: "north_query",
+    description:
+      "Query the token index directly. Run custom queries against token definitions, " +
+      "usages, and the token graph.",
+    tier: 3,
+  },
+];
+
+/**
+ * Get tools available for a given server state.
+ */
+export function getToolsForState(state: ServerState): TieredTool[] {
+  switch (state) {
+    case "none":
+      return TIERED_TOOLS.filter((t) => t.tier === 1);
+    case "config":
+      return TIERED_TOOLS.filter((t) => t.tier <= 2);
+    case "indexed":
+      return TIERED_TOOLS;
   }
-
-  const indexStatus = await getIndexStatus(cwd, configPath);
-
-  if (indexStatus.exists) {
-    return {
-      state: "indexed",
-      configPath,
-      indexPath: indexStatus.indexPath,
-      cwd,
-    };
-  }
-
-  return { state: "config", configPath, cwd };
 }
 
 // ============================================================================
@@ -119,7 +187,7 @@ function registerTools(server: McpServer): void {
 /**
  * Get guidance based on current server state.
  */
-function getGuidance(state: ServerState): string[] {
+export function getGuidance(state: ServerState): string[] {
   switch (state) {
     case "none":
       return [
