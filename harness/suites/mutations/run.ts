@@ -5,13 +5,10 @@ import { emptyDir, readJson, writeJson, writeText } from "../../utils/fs.ts";
 import { applyPatch, checkoutRef, cloneRepo, stageAll } from "../../utils/git.ts";
 import { type NorthJsonReport, parseNorthJson, runNorth } from "../../utils/north.ts";
 import { harnessPath } from "../../utils/paths.ts";
+import { readRepoRegistry, resolveRepo } from "../../utils/repos.ts";
 
 interface MutationConfig {
-  repo: {
-    name: string;
-    url: string;
-    sha: string;
-  };
+  repo: string;
   basePatch?: string;
   timeoutMs?: number;
 }
@@ -29,6 +26,8 @@ interface SuiteResult {
 export async function runMutationSuite(options: MutationRunOptions = {}) {
   const configPath = harnessPath("suites", "mutations", "config.json");
   const config = await readJson<MutationConfig>(configPath);
+  const registry = await readRepoRegistry();
+  const repo = resolveRepo(registry, config.repo);
   const suitesDir = harnessPath("suites", "mutations");
   const entries = await readdir(suitesDir, { withFileTypes: true });
 
@@ -56,14 +55,14 @@ export async function runMutationSuite(options: MutationRunOptions = {}) {
 
     await emptyDir(workDir);
 
-    const cloneResult = await cloneRepo(config.repo.url, workDir);
+    const cloneResult = await cloneRepo(repo.url, workDir);
     if (cloneResult.code !== 0) {
       await writeText(join(artifactDir, "command.log"), formatCommandLog("git clone", cloneResult));
       results.push({ name: suite, ok: false, errors: ["git clone failed"] });
       continue;
     }
 
-    const checkoutResult = await checkoutRef(workDir, config.repo.sha);
+    const checkoutResult = await checkoutRef(workDir, repo.sha);
     if (checkoutResult.code !== 0) {
       await writeText(
         join(artifactDir, "command.log"),

@@ -13,6 +13,7 @@ import { checkoutRef, cloneRepo } from "../../utils/git.ts";
 import { hashJson } from "../../utils/hash.ts";
 import { type NorthJsonReport, parseNorthJson, runNorth } from "../../utils/north.ts";
 import { harnessPath } from "../../utils/paths.ts";
+import { readRepoRegistry, resolveRepo } from "../../utils/repos.ts";
 
 interface CorpusDefaults {
   timeBudgetMs?: number;
@@ -21,12 +22,11 @@ interface CorpusDefaults {
 }
 
 interface CorpusRepo {
-  name: string;
-  url: string;
-  sha: string;
-  type: string;
+  repo: string;
+  type?: string;
   paths?: string[];
   index?: boolean;
+  enabled?: boolean;
   timeBudgetMs?: number;
   coverageThreshold?: number;
   determinismRuns?: number;
@@ -53,9 +53,10 @@ const INJECTED_FILE = "Probe.tsx";
 
 export async function runCorpusSuite(options: CorpusRunOptions = {}) {
   const config = await loadCorpusConfig();
+  const registry = await readRepoRegistry();
   const repos = options.repo
-    ? config.repos.filter((repo) => repo.name === options.repo)
-    : config.repos;
+    ? config.repos.filter((repo) => repo.repo === options.repo)
+    : config.repos.filter((repo) => repo.enabled !== false);
 
   if (repos.length === 0) {
     throw new Error(options.repo ? `Repo '${options.repo}' not found.` : "No corpus repos found.");
@@ -64,22 +65,28 @@ export async function runCorpusSuite(options: CorpusRunOptions = {}) {
   const results: CorpusResult[] = [];
 
   for (const repo of repos) {
-    const workDir = harnessPath(".cache", "corpus", repo.name);
-    const artifactDir = harnessPath("artifacts", "corpus", repo.name);
+    const resolvedRepo = resolveRepo(registry, repo.repo);
+    const workDir = harnessPath(".cache", "corpus", resolvedRepo.name);
+    const artifactDir = harnessPath("artifacts", "corpus", resolvedRepo.name);
     await emptyDir(workDir);
 
-    const cloneResult = await cloneRepo(repo.url, workDir);
+    const cloneResult = await cloneRepo(resolvedRepo.url, workDir);
     if (cloneResult.code !== 0) {
       await writeText(joinLogPath(artifactDir), formatCommandLog("git clone", cloneResult));
-      results.push({ name: repo.name, status: "fail", warnings: [], errors: ["git clone failed"] });
+      results.push({
+        name: resolvedRepo.name,
+        status: "fail",
+        warnings: [],
+        errors: ["git clone failed"],
+      });
       continue;
     }
 
-    const checkoutResult = await checkoutRef(workDir, repo.sha);
+    const checkoutResult = await checkoutRef(workDir, resolvedRepo.sha);
     if (checkoutResult.code !== 0) {
       await writeText(joinLogPath(artifactDir), formatCommandLog("git checkout", checkoutResult));
       results.push({
-        name: repo.name,
+        name: resolvedRepo.name,
         status: "fail",
         warnings: [],
         errors: ["git checkout failed"],
@@ -166,11 +173,11 @@ export async function runCorpusSuite(options: CorpusRunOptions = {}) {
 
     const status: CorpusResult["status"] =
       errors.length > 0 ? "fail" : warnings.length > 0 ? "warn" : "ok";
-    results.push({ name: repo.name, status, warnings, errors });
+    results.push({ name: resolvedRepo.name, status, warnings, errors });
 
     await ensureDir(artifactDir);
     await writeJson(resolve(artifactDir, "summary.json"), {
-      repo: repo.name,
+      repo: resolvedRepo.name,
       status,
       warnings,
       errors,

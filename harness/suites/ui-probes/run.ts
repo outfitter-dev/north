@@ -5,25 +5,20 @@ import { runCommand } from "../../utils/exec.ts";
 import { emptyDir, ensureDir, readJson, writeJson, writeText } from "../../utils/fs.ts";
 import { checkoutRef, cloneRepo } from "../../utils/git.ts";
 import { harnessPath } from "../../utils/paths.ts";
+import { readRepoRegistry, resolveRepo } from "../../utils/repos.ts";
 
 interface UiProbeRoute {
   name: string;
   path: string;
 }
 
-interface UiProbeRepo {
-  name: string;
-  url: string;
-  sha: string;
+interface UiProbeConfig {
+  repo: string;
   appDir: string;
   install?: string;
   devCommand: string;
   port: number;
   routes: UiProbeRoute[];
-}
-
-interface UiProbeConfig {
-  repo: UiProbeRepo;
 }
 
 interface UiProbeRunOptions {
@@ -44,7 +39,8 @@ const VIEWPORTS = [
 
 export async function runUiProbes(options: UiProbeRunOptions = {}) {
   const config = await readJson<UiProbeConfig>(harnessPath("suites", "ui-probes", "config.json"));
-  const repo = config.repo;
+  const registry = await readRepoRegistry();
+  const repo = resolveRepo(registry, config.repo);
   const workDir = harnessPath(".cache", "ui-probes", repo.name);
   const artifactRoot = harnessPath("artifacts", "ui-probes", repo.name, repo.sha);
 
@@ -60,20 +56,20 @@ export async function runUiProbes(options: UiProbeRunOptions = {}) {
     throw new Error("git checkout failed");
   }
 
-  if (repo.install) {
-    const installCmd = parseCommand(repo.install);
+  if (config.install) {
+    const installCmd = parseCommand(config.install);
     await runCommand(installCmd.cmd, installCmd.args, { cwd: workDir, timeoutMs: 300_000 });
   }
 
-  const appDir = resolve(workDir, repo.appDir);
-  const server = startServer(repo.devCommand, appDir, repo.port, artifactRoot);
+  const appDir = resolve(workDir, config.appDir);
+  const server = startServer(config.devCommand, appDir, config.port, artifactRoot);
   try {
-    const baseUrl = `http://localhost:${repo.port}`;
+    const baseUrl = `http://localhost:${config.port}`;
     await waitForServer(baseUrl, 60_000);
 
     const routes = options.route
-      ? repo.routes.filter((route) => route.name === options.route)
-      : repo.routes;
+      ? config.routes.filter((route) => route.name === options.route)
+      : config.routes;
 
     if (routes.length === 0) {
       throw new Error(options.route ? `Route '${options.route}' not found.` : "No routes defined.");
