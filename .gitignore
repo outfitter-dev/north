@@ -51,3 +51,4 @@ coverage/
 # Harness
 harness/.cache/
 harness/artifacts/
+.harness/
