@@ -8,10 +8,12 @@ import { isIssueCoveredByDeviation, parseCandidates, parseDeviations } from "./c
 import { extractClassTokens } from "./extract.ts";
 import { getIgnorePatterns } from "./ignores.ts";
 import { loadRules } from "./rules.ts";
+import { aggregateDeviations } from "./tracking.ts";
 import type {
   Candidate,
   ClassToken,
   Deviation,
+  DeviationGroup,
   ExtractionResult,
   LintIssue,
   LintReport,
@@ -349,6 +351,12 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
     return !isIssueCoveredByDeviation(issue.ruleKey, issue.line, fileDeviations);
   });
 
+  // Aggregate deviations for tracking and promotion suggestions
+  const deviationAnalysis = aggregateDeviations(allDeviations);
+
+  // Merge suggested candidates from deviation analysis with parsed candidates
+  const finalCandidates = [...allCandidates, ...deviationAnalysis.suggestedCandidates];
+
   const stats = computeStats(extractionResults, files.length);
   const sortedIssues = sortIssues(issues);
   const summary = createSummary(sortedIssues);
@@ -360,7 +368,8 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
       stats,
       rules,
       deviations: allDeviations,
-      candidates: allCandidates,
+      candidates: finalCandidates,
+      deviationGroups: deviationAnalysis.groups,
     },
     configPath,
   };
