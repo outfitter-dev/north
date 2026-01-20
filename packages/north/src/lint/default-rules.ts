@@ -89,4 +89,27 @@ note: |
   Tailwind utility classes to ensure consistency and dark mode support.
 `,
   },
+  {
+    filename: "component-complexity.yaml",
+    content: `id: north/component-complexity
+language: tsx
+severity: warn
+message: "Component has too many utility classes; consider extracting to composable utilities"
+rule:
+  kind: jsx_attribute
+  has:
+    kind: property_identifier
+    regex: "^className$"
+note: |
+  Class count thresholds by context:
+  - primitive: 10 classes (strict, should be simple)
+  - composed: 15 classes (moderate complexity allowed)
+  - layout: 20 classes (more flexibility for layout concerns)
+
+  When a className attribute exceeds these thresholds, consider:
+  - Extracting repeated patterns to utility functions
+  - Using component variants with cva()
+  - Creating semantic wrapper components
+`,
+  },
 ];
