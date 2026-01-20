@@ -5,7 +5,8 @@ import { minimatch } from "minimatch";
 import { findConfigFile, loadConfig } from "../config/loader.ts";
 import type { NorthConfig } from "../config/schema.ts";
 import { isIssueCoveredByDeviation, parseCandidates, parseDeviations } from "./comments.ts";
-import { extractClassTokens } from "./extract.ts";
+import { getContext } from "./context.ts";
+import { extractClassTokens, extractComponentDefinitions } from "./extract.ts";
 import { getIgnorePatterns } from "./ignores.ts";
 import { loadRules } from "./rules.ts";
 import { aggregateDeviations } from "./tracking.ts";
@@ -414,6 +415,41 @@ function evaluateComponentComplexity(
   return issues;
 }
 
+/**
+ * Evaluate exported components for missing @north-role semantic comments.
+ * Only applies to composed context (not primitives or layouts).
+ */
+function evaluateMissingSemanticComment(
+  source: string,
+  filePath: string,
+  context: string
+): LintIssue[] {
+  // Only apply to composed context
+  if (context !== "composed") {
+    return [];
+  }
+
+  const issues: LintIssue[] = [];
+  const components = extractComponentDefinitions(source, filePath);
+
+  for (const component of components) {
+    if (!component.hasNorthRoleComment) {
+      issues.push({
+        ruleId: "north/missing-semantic-comment",
+        ruleKey: "missing-semantic-comment",
+        severity: "info",
+        message: `Exported component "${component.name}" should have @north-role JSDoc annotation`,
+        filePath,
+        line: component.line,
+        column: component.column,
+        note: "Add a JSDoc comment with @north-role to document the component's purpose.",
+      });
+    }
+  }
+
+  return issues;
+}
+
 function scanInlineColorStyles(source: string, filePath: string, config: NorthConfig): LintIssue[] {
   const ruleConfig = resolveBuiltinRuleConfig(config, "no-inline-color", "error");
 
@@ -512,6 +548,10 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
 
         // Evaluate component complexity at site level
         rawIssues.push(...evaluateComponentComplexity(extraction.sites, displayPath, config));
+
+        // Check for missing @north-role semantic comments on exported components
+        const fileContext = getContext(displayPath, source);
+        rawIssues.push(...evaluateMissingSemanticComment(source, displayPath, fileContext));
       }
     } catch (error) {
       rawIssues.push({
