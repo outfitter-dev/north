@@ -2,7 +2,9 @@ import { readFile } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
 import { glob } from "glob";
 import { findConfigFile, loadConfig } from "../config/loader.ts";
+import type { NorthConfig } from "../config/schema.ts";
 import { extractClassTokens } from "./extract.ts";
+import { getIgnorePatterns } from "./ignores.ts";
 import { loadRules } from "./rules.ts";
 import type {
   ClassToken,
@@ -28,18 +30,6 @@ export class LintError extends Error {
     this.name = "LintError";
   }
 }
-
-const DEFAULT_IGNORES = [
-  "**/node_modules/**",
-  "**/.git/**",
-  "**/.next/**",
-  "**/.north/**",
-  "**/dist/**",
-  "**/build/**",
-  "**/coverage/**",
-  "**/.turbo/**",
-  "**/north/**",
-];
 
 interface LintOptions {
   cwd?: string;
@@ -246,16 +236,21 @@ async function loadProjectConfig(cwd: string, configOverride?: string) {
   return { config: result.config, configPath };
 }
 
-async function listFiles(cwd: string, fileOverrides?: string[]): Promise<string[]> {
+async function listFiles(
+  cwd: string,
+  config: NorthConfig,
+  fileOverrides?: string[]
+): Promise<string[]> {
   if (fileOverrides && fileOverrides.length > 0) {
     return fileOverrides.map((file) => (isAbsolute(file) ? file : resolve(cwd, file)));
   }
 
+  const ignorePatterns = getIgnorePatterns(config);
   const files = await glob("**/*.{tsx,jsx}", {
     cwd,
     absolute: true,
     nodir: true,
-    ignore: DEFAULT_IGNORES,
+    ignore: ignorePatterns,
   });
 
   return files;
@@ -281,7 +276,7 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
   const rulesDir = resolve(configPath, "..", "rules");
   const rules = await loadRules(rulesDir, config);
 
-  const files = await listFiles(cwd, options.files);
+  const files = await listFiles(cwd, config, options.files);
   const extractionResults: ExtractionResult[] = [];
   const issues: LintIssue[] = [];
 

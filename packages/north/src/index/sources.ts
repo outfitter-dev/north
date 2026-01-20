@@ -4,17 +4,7 @@ import { relative, resolve } from "node:path";
 import { glob } from "glob";
 import { findConfigFile } from "../config/loader.ts";
 import type { NorthConfig } from "../config/schema.ts";
-
-const DEFAULT_IGNORES = [
-  "**/node_modules/**",
-  "**/.git/**",
-  "**/.next/**",
-  "**/.north/**",
-  "**/dist/**",
-  "**/build/**",
-  "**/coverage/**",
-  "**/.turbo/**",
-];
+import { getIndexIgnorePatterns } from "../lint/ignores.ts";
 
 export interface SourceFiles {
   configPath: string;
@@ -34,18 +24,20 @@ export async function collectSourceFiles(cwd: string, configPath?: string): Prom
     throw new Error("Config file not found. Run 'north init' to initialize.");
   }
 
+  const ignorePatterns = getIndexIgnorePatterns();
+
   const [tsxFiles, cssFiles] = await Promise.all([
     glob("**/*.{tsx,jsx}", {
       cwd,
       absolute: true,
       nodir: true,
-      ignore: DEFAULT_IGNORES,
+      ignore: ignorePatterns,
     }),
     glob("**/*.css", {
       cwd,
       absolute: true,
       nodir: true,
-      ignore: DEFAULT_IGNORES,
+      ignore: ignorePatterns,
     }),
   ]);
 

@@ -194,6 +194,7 @@ export type CompatibilityConfig = z.infer<typeof CompatibilityConfigSchema>;
 export const LintConfigSchema = z
   .object({
     classFunctions: z.array(z.string()).min(1).optional(),
+    ignore: z.array(z.string()).optional(),
   })
   .optional();
 
