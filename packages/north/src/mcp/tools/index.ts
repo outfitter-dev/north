@@ -88,3 +88,14 @@ export {
   executeQueryTool,
   registerQueryTool,
 } from "./query.ts";
+
+// Classify tool (Tier 3)
+export {
+  type ClassifyInput,
+  ClassifyInputSchema,
+  type ClassifyOptions,
+  type ClassifyResponse,
+  type ClassifyFileResult,
+  executeClassifyTool,
+  registerClassifyTool,
+} from "./classify-tool.ts";
