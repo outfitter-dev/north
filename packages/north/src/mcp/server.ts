@@ -7,9 +7,9 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { getGuidance, registerStatusTool } from "./tools/index.ts";
 import { registerContextTool } from "./tools/context.ts";
 import { registerDiscoverTool } from "./tools/discover.ts";
+import { getGuidance, registerStatusTool } from "./tools/index.ts";
 import { registerPromoteTool } from "./tools/promote.ts";
 import { registerRefactorTool } from "./tools/refactor.ts";
 import type { ServerState } from "./types.ts";

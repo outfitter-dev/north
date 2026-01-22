@@ -4,12 +4,7 @@ import { type IndexDatabase, openIndexDatabase } from "../index/db.ts";
 import { checkIndexFresh, getIndexStatus } from "../index/queries.ts";
 import { featureAvailable, getSchemaVersion } from "../index/version-guard.ts";
 import {
-  FONT_WEIGHT_VALUES,
-  LEADING_VALUES,
-  SPACING_PREFIXES,
-  TRACKING_VALUES,
   TYPOGRAPHY_PREFIXES as TYPOGRAPHY_PREFIXES_BASE,
-  TYPOGRAPHY_SIZE_VALUES,
   extractVarColorToken,
   isColorLiteralValue,
   parseColorUtility,
@@ -665,9 +660,10 @@ export function buildCascade(db: IndexDatabase, selector: string, limit: number)
 
   const limits: CascadeLimits = {
     confidence: missing.length === 0 && schemaLimitations.length === 0 ? "full" : "partial",
-    missing: missing.length > 0 || schemaLimitations.length > 0
-      ? [...missing, ...schemaLimitations]
-      : undefined,
+    missing:
+      missing.length > 0 || schemaLimitations.length > 0
+        ? [...missing, ...schemaLimitations]
+        : undefined,
   };
 
   return {
