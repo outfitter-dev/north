@@ -98,6 +98,7 @@ program
   .option("-c, --config <path>", "Path to config file")
   .option("--compact", "Output minimal context")
   .option("--json", "Output JSON")
+  .option("--include-values", "Include raw token values (default: roles only)")
   .option("-q, --quiet", "Suppress output")
   .action(async (options) => {
     const result = await context({
@@ -105,6 +106,7 @@ program
       config: options.config,
       compact: options.compact,
       json: options.json,
+      includeValues: options.includeValues,
       quiet: options.quiet,
     });
 
