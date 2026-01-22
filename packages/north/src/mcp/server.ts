@@ -9,6 +9,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { getGuidance, registerStatusTool } from "./tools/index.ts";
 import { registerContextTool } from "./tools/context.ts";
+import { registerRefactorTool } from "./tools/refactor.ts";
 import type { ServerState } from "./types.ts";
 
 // Re-export getGuidance for backward compatibility with tests
@@ -156,7 +157,8 @@ function registerTools(server: McpServer): void {
   // Tier 2: Config-dependent tools
   registerContextTool(server);
 
-  // Tier 3 tools will be added in future commits
+  // Tier 3: Index-dependent tools
+  registerRefactorTool(server);
 }
 
 // ============================================================================
