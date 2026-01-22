@@ -1,5 +1,7 @@
+import { Database } from "bun:sqlite";
 import { describe, expect, test } from "bun:test";
-import { TYPOGRAPHY_PREFIXES, buildTypographyUsage, parseTypographyUtility } from "./find.ts";
+import type { IndexDatabase } from "../index/db.ts";
+import { TYPOGRAPHY_PREFIXES, buildCascade, buildTypographyUsage, parseTypographyUtility } from "./find.ts";
 
 describe("parseTypographyUtility", () => {
   test("parses text size utilities", () => {
@@ -170,5 +172,168 @@ describe("buildTypographyUsage", () => {
     expect(result.values[0]).toEqual({ value: "lg", count: 10 });
     expect(result.values[1]).toEqual({ value: "base", count: 5 });
     expect(result.values[2]).toEqual({ value: "sm", count: 1 });
+  });
+});
+
+
+function createTestDb(): IndexDatabase {
+  const db = new Database(":memory:");
+  db.exec(`
+    CREATE TABLE tokens (
+      name TEXT PRIMARY KEY,
+      value TEXT,
+      file TEXT,
+      line INTEGER,
+      layer INTEGER,
+      computed_value TEXT
+    );
+
+    CREATE TABLE token_themes (
+      token_name TEXT,
+      theme TEXT,
+      value TEXT,
+      source TEXT,
+      PRIMARY KEY (token_name, theme)
+    );
+
+    CREATE TABLE usages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      file TEXT,
+      line INTEGER,
+      column INTEGER,
+      class_name TEXT,
+      resolved_token TEXT,
+      context TEXT,
+      component TEXT
+    );
+
+    CREATE TABLE token_graph (
+      ancestor TEXT,
+      descendant TEXT,
+      depth INTEGER,
+      path TEXT,
+      PRIMARY KEY (ancestor, descendant)
+    );
+
+    CREATE TABLE meta (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    );
+
+    CREATE INDEX usages_file_idx ON usages (file);
+    CREATE INDEX usages_token_idx ON usages (resolved_token);
+    CREATE INDEX token_graph_ancestor_idx ON token_graph (ancestor);
+    CREATE INDEX token_graph_descendant_idx ON token_graph (descendant);
+    CREATE INDEX token_themes_name_idx ON token_themes (token_name);
+
+    INSERT INTO meta (key, value) VALUES ('schema_version', '2');
+  `);
+  return db as unknown as IndexDatabase;
+}
+
+describe("buildCascade - downstream dependencies", () => {
+  test("returns downstream dependencies for a token with dependents", () => {
+    const db = createTestDb();
+
+    // Insert a base token
+    db.exec(
+      `INSERT INTO tokens (name, value, file, line) VALUES ('--color-primary', '#3b82f6', 'tokens.css', 10)`
+    );
+
+    // Insert dependent tokens that reference the base token
+    db.exec(
+      `INSERT INTO tokens (name, value, file, line) VALUES ('--button-bg', 'var(--color-primary)', 'tokens.css', 20)`
+    );
+    db.exec(
+      `INSERT INTO tokens (name, value, file, line) VALUES ('--link-color', 'var(--color-primary)', 'tokens.css', 30)`
+    );
+
+    // Insert token graph relationships (ancestor -> descendant)
+    db.exec(
+      `INSERT INTO token_graph (ancestor, descendant, depth, path) VALUES ('--color-primary', '--button-bg', 1, '["--color-primary", "--button-bg"]')`
+    );
+    db.exec(
+      `INSERT INTO token_graph (ancestor, descendant, depth, path) VALUES ('--color-primary', '--link-color', 1, '["--color-primary", "--link-color"]')`
+    );
+
+    const result = buildCascade(db, "--color-primary", 10);
+
+    expect(result.tokenDependencies).toBeDefined();
+    expect(result.tokenDependencies?.downstream).toEqual(["--button-bg", "--link-color"]);
+
+    db.close();
+  });
+
+  test("returns undefined tokenDependencies when no downstream deps exist", () => {
+    const db = createTestDb();
+
+    // Insert a token with no dependents
+    db.exec(
+      `INSERT INTO tokens (name, value, file, line) VALUES ('--spacing-sm', '0.5rem', 'tokens.css', 10)`
+    );
+
+    const result = buildCascade(db, "--spacing-sm", 10);
+
+    expect(result.tokenDependencies).toBeUndefined();
+
+    db.close();
+  });
+
+  test("returns undefined tokenDependencies for non-existent token", () => {
+    const db = createTestDb();
+
+    const result = buildCascade(db, "--nonexistent", 10);
+
+    expect(result.tokenDependencies).toBeUndefined();
+
+    db.close();
+  });
+
+  test("returns downstream dependencies sorted alphabetically", () => {
+    const db = createTestDb();
+
+    db.exec(
+      `INSERT INTO tokens (name, value, file, line) VALUES ('--base-color', '#000', 'tokens.css', 10)`
+    );
+
+    // Insert in non-alphabetical order
+    db.exec(
+      `INSERT INTO token_graph (ancestor, descendant, depth, path) VALUES ('--base-color', '--zebra-color', 1, '["--base-color", "--zebra-color"]')`
+    );
+    db.exec(
+      `INSERT INTO token_graph (ancestor, descendant, depth, path) VALUES ('--base-color', '--apple-color', 1, '["--base-color", "--apple-color"]')`
+    );
+    db.exec(
+      `INSERT INTO token_graph (ancestor, descendant, depth, path) VALUES ('--base-color', '--middle-color', 1, '["--base-color", "--middle-color"]')`
+    );
+
+    const result = buildCascade(db, "--base-color", 10);
+
+    expect(result.tokenDependencies?.downstream).toEqual([
+      "--apple-color",
+      "--middle-color",
+      "--zebra-color",
+    ]);
+
+    db.close();
+  });
+
+  test("returns unique downstream dependencies (no duplicates)", () => {
+    const db = createTestDb();
+
+    db.exec(
+      `INSERT INTO tokens (name, value, file, line) VALUES ('--base-token', '#fff', 'tokens.css', 10)`
+    );
+
+    // The DISTINCT in SQL should handle duplicates, but let's verify
+    db.exec(
+      `INSERT INTO token_graph (ancestor, descendant, depth, path) VALUES ('--base-token', '--child-token', 1, '["--base-token", "--child-token"]')`
+    );
+
+    const result = buildCascade(db, "--base-token", 10);
+
+    expect(result.tokenDependencies?.downstream).toEqual(["--child-token"]);
+
+    db.close();
   });
 });
