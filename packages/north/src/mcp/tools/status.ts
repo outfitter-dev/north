@@ -125,65 +125,89 @@ export async function executeStatusTool(): Promise<StatusResponse> {
 // Tool Registration
 // ============================================================================
 
+const STATUS_DESCRIPTION =
+  "Get North design system status. Returns current state (none/config/indexed), " +
+  "available capabilities, available tools, and guidance on next steps. " +
+  "Pass refresh=true to re-detect state and notify clients of tool list changes.";
+
+/**
+ * Handler for north_status and its alias north_doctor.
+ */
+function createStatusHandler(server: McpServer) {
+  return async (args: unknown) => {
+    // Parse and validate input
+    const parseResult = StatusInputSchema.safeParse(args);
+    if (!parseResult.success) {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(
+              {
+                success: false,
+                error: "Invalid input parameters",
+                details: parseResult.error.issues,
+              },
+              null,
+              2
+            ),
+          },
+        ],
+        isError: true,
+      };
+    }
+
+    const input: StatusInput = parseResult.data;
+    const status = await executeStatusTool();
+
+    // When refresh is requested, notify clients that tool list may have changed
+    if (input.refresh) {
+      server.sendToolListChanged();
+    }
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify(status, null, 2),
+        },
+      ],
+    };
+  };
+}
+
 /**
  * Register the north_status tool with the MCP server.
  *
  * This is a Tier 1 tool that is always available, regardless of
  * whether North has been configured in the project.
  *
- * When called with \`refresh: true\`, re-detects state and sends
- * \`notifications/tools/list_changed\` to notify clients of potential
+ * When called with `refresh: true`, re-detects state and sends
+ * `notifications/tools/list_changed` to notify clients of potential
  * tool availability changes.
  */
 export function registerStatusTool(server: McpServer): void {
   server.registerTool(
     "north_status",
     {
-      description:
-        "Get North design system status. Returns current state (none/config/indexed), " +
-        "available capabilities, available tools, and guidance on next steps. " +
-        "Pass refresh=true to re-detect state and notify clients of tool list changes.",
+      description: STATUS_DESCRIPTION,
       inputSchema: StatusInputSchema,
     },
-    async (args: unknown) => {
-      // Parse and validate input
-      const parseResult = StatusInputSchema.safeParse(args);
-      if (!parseResult.success) {
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(
-                {
-                  success: false,
-                  error: "Invalid input parameters",
-                  details: parseResult.error.issues,
-                },
-                null,
-                2
-              ),
-            },
-          ],
-          isError: true,
-        };
-      }
+    createStatusHandler(server)
+  );
+}
 
-      const input: StatusInput = parseResult.data;
-      const status = await executeStatusTool();
-
-      // When refresh is requested, notify clients that tool list may have changed
-      if (input.refresh) {
-        server.sendToolListChanged();
-      }
-
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(status, null, 2),
-          },
-        ],
-      };
-    }
+/**
+ * Register the north_doctor alias for north_status.
+ * This matches the 'north doctor' CLI command for discoverability.
+ */
+export function registerStatusAlias(server: McpServer): void {
+  server.registerTool(
+    "north_doctor",
+    {
+      description: `${STATUS_DESCRIPTION} (Alias for north_status, matches 'north doctor' CLI command.)`,
+      inputSchema: StatusInputSchema,
+    },
+    createStatusHandler(server)
   );
 }

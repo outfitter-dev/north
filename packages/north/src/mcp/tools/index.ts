@@ -9,6 +9,7 @@ export {
   executeStatusTool,
   getGuidance,
   registerStatusTool,
+  registerStatusAlias,
   StatusInputSchema,
 } from "./status.ts";
 export type { StatusInput, StatusResponse } from "./status.ts";
@@ -46,6 +47,7 @@ export {
   type DiscoverPayload,
   executeDiscoverTool,
   registerDiscoverTool,
+  registerDiscoverAlias,
 } from "./discover.ts";
 
 // Promote tool (Tier 3)
