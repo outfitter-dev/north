@@ -6,8 +6,30 @@
  */
 
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+import { getToolsForState } from "../server.ts";
 import { detectContext } from "../state.ts";
 import type { ServerState } from "../types.ts";
+
+// ============================================================================
+// Input Schema
+// ============================================================================
+
+/**
+ * Input schema for the north_status tool.
+ */
+export const StatusInputSchema = z.object({
+  refresh: z
+    .boolean()
+    .optional()
+    .describe("Re-detect state and notify clients of tool list changes"),
+});
+
+export type StatusInput = z.infer<typeof StatusInputSchema>;
+
+// ============================================================================
+// Guidance
+// ============================================================================
 
 /**
  * Get guidance based on current server state.
@@ -37,6 +59,10 @@ export function getGuidance(state: ServerState): string[] {
   }
 }
 
+// ============================================================================
+// Response Types
+// ============================================================================
+
 /**
  * Status response structure returned by north_status tool.
  */
@@ -58,17 +84,26 @@ export interface StatusResponse {
   };
   /** Guidance messages for the user */
   guidance: string[];
+  /** Tools available at current tier */
+  availableTools: string[];
 }
+
+// ============================================================================
+// Core Logic
+// ============================================================================
 
 /**
  * Execute the north_status tool handler.
  *
  * Detects the current project state and returns a status report
- * including available capabilities and guidance for next steps.
+ * including available capabilities, available tools, and guidance for next steps.
  */
 export async function executeStatusTool(): Promise<StatusResponse> {
   const cwd = process.cwd();
   const ctx = await detectContext(cwd);
+
+  // Get tools available at current tier
+  const availableTools = getToolsForState(ctx.state).map((t) => t.name);
 
   return {
     state: ctx.state,
@@ -82,14 +117,23 @@ export async function executeStatusTool(): Promise<StatusResponse> {
       generate: ctx.state !== "none",
     },
     guidance: getGuidance(ctx.state),
+    availableTools,
   };
 }
+
+// ============================================================================
+// Tool Registration
+// ============================================================================
 
 /**
  * Register the north_status tool with the MCP server.
  *
  * This is a Tier 1 tool that is always available, regardless of
  * whether North has been configured in the project.
+ *
+ * When called with \`refresh: true\`, re-detects state and sends
+ * \`notifications/tools/list_changed\` to notify clients of potential
+ * tool availability changes.
  */
 export function registerStatusTool(server: McpServer): void {
   server.registerTool(
@@ -97,10 +141,40 @@ export function registerStatusTool(server: McpServer): void {
     {
       description:
         "Get North design system status. Returns current state (none/config/indexed), " +
-        "available capabilities, and guidance on next steps.",
+        "available capabilities, available tools, and guidance on next steps. " +
+        "Pass refresh=true to re-detect state and notify clients of tool list changes.",
+      inputSchema: StatusInputSchema,
     },
-    async () => {
+    async (args: unknown) => {
+      // Parse and validate input
+      const parseResult = StatusInputSchema.safeParse(args);
+      if (!parseResult.success) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(
+                {
+                  success: false,
+                  error: "Invalid input parameters",
+                  details: parseResult.error.issues,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      const input: StatusInput = parseResult.data;
       const status = await executeStatusTool();
+
+      // When refresh is requested, notify clients that tool list may have changed
+      if (input.refresh) {
+        server.sendToolListChanged();
+      }
 
       return {
         content: [

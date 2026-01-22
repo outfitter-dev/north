@@ -12,6 +12,7 @@ import { registerContextTool } from "./tools/context.ts";
 import { registerDiscoverTool } from "./tools/discover.ts";
 import { getGuidance, registerStatusTool } from "./tools/index.ts";
 import { registerPromoteTool } from "./tools/promote.ts";
+import { registerQueryTool } from "./tools/query.ts";
 import { registerRefactorTool } from "./tools/refactor.ts";
 import type { ServerState } from "./types.ts";
 
@@ -164,6 +165,7 @@ function registerTools(server: McpServer): void {
   // Tier 3: Index-dependent tools
   registerDiscoverTool(server);
   registerPromoteTool(server);
+  registerQueryTool(server);
   registerRefactorTool(server);
 }
 
