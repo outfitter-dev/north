@@ -1,10 +1,11 @@
 import type { IndexDatabase } from "./db.ts";
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export function createIndexSchema(db: IndexDatabase): void {
   db.exec(`
     DROP TABLE IF EXISTS tokens;
+    DROP TABLE IF EXISTS token_themes;
     DROP TABLE IF EXISTS usages;
     DROP TABLE IF EXISTS patterns;
     DROP TABLE IF EXISTS token_graph;
@@ -18,6 +19,14 @@ export function createIndexSchema(db: IndexDatabase): void {
       line INTEGER,
       layer INTEGER,
       computed_value TEXT
+    );
+
+    CREATE TABLE token_themes (
+      token_name TEXT,
+      theme TEXT,
+      value TEXT,
+      source TEXT,
+      PRIMARY KEY (token_name, theme)
     );
 
     CREATE TABLE usages (
@@ -64,5 +73,6 @@ export function createIndexSchema(db: IndexDatabase): void {
     CREATE INDEX usages_token_idx ON usages (resolved_token);
     CREATE INDEX token_graph_ancestor_idx ON token_graph (ancestor);
     CREATE INDEX token_graph_descendant_idx ON token_graph (descendant);
+    CREATE INDEX token_themes_name_idx ON token_themes (token_name);
   `);
 }
