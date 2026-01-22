@@ -8,6 +8,7 @@ import { find } from "../commands/find.ts";
 import { generateTokens } from "../commands/gen.ts";
 import { runIndex } from "../commands/index.ts";
 import { init } from "../commands/init.ts";
+import { migrate } from "../commands/migrate.ts";
 import { promote } from "../commands/promote.ts";
 import { refactor } from "../commands/refactor.ts";
 
@@ -275,6 +276,49 @@ program
     });
 
     if (!result.success) {
+      process.exit(1);
+    }
+  });
+
+// ============================================================================
+// migrate - Execute migration plan
+// ============================================================================
+
+program
+  .command("migrate")
+  .description("Execute a migration plan in batch")
+  .argument("[plan]", "Plan file path (default: .north/migration-plan.json)")
+  .option("-c, --config <path>", "Path to config file")
+  .option("--steps <ids>", "Only execute specific step IDs (comma-separated)")
+  .option("--skip <ids>", "Skip specific step IDs (comma-separated)")
+  .option("--file <path>", "Only migrate specific file")
+  .option("--interactive", "Confirm each change")
+  .option("--backup", "Create .bak files before changes (default: true)")
+  .option("--no-backup", "Skip backup file creation")
+  .option("--dry-run", "Preview changes only (default)")
+  .option("--apply", "Apply changes to files")
+  .option("--continue", "Continue from last checkpoint")
+  .option("--json", "Output JSON")
+  .option("-q, --quiet", "Suppress output")
+  .action(async (plan, options) => {
+    const result = await migrate({
+      cwd: process.cwd(),
+      config: options.config,
+      plan,
+      steps: options.steps ? options.steps.split(",") : undefined,
+      skip: options.skip ? options.skip.split(",") : undefined,
+      file: options.file,
+      interactive: options.interactive,
+      backup: options.backup,
+      dryRun: options.dryRun,
+      apply: options.apply,
+      continue: options.continue,
+      json: options.json,
+      quiet: options.quiet,
+    });
+
+    // Exit with error if migration had failures
+    if (result.summary.failed > 0) {
       process.exit(1);
     }
   });
