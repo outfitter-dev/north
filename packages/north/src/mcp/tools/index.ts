@@ -20,6 +20,21 @@ export {
   registerDiscoverTool,
 } from "./discover.ts";
 
+// Promote tool (Tier 3)
+export {
+  type ExistingUsage,
+  type PromoteInput,
+  PromoteInputSchema,
+  type PromoteOptions,
+  type PromoteResponse,
+  type Recommendation,
+  type SimilarToken,
+  detectTokenType,
+  executePromoteTool,
+  generateSuggestedName,
+  registerPromoteTool,
+} from "./promote.ts";
+
 // Refactor tool (Tier 3)
 export {
   type RefactorCandidate,

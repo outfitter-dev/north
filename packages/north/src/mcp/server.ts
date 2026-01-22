@@ -10,6 +10,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { getGuidance, registerStatusTool } from "./tools/index.ts";
 import { registerContextTool } from "./tools/context.ts";
 import { registerDiscoverTool } from "./tools/discover.ts";
+import { registerPromoteTool } from "./tools/promote.ts";
 import { registerRefactorTool } from "./tools/refactor.ts";
 import type { ServerState } from "./types.ts";
 
@@ -160,6 +161,7 @@ function registerTools(server: McpServer): void {
 
   // Tier 3: Index-dependent tools
   registerDiscoverTool(server);
+  registerPromoteTool(server);
   registerRefactorTool(server);
 }
 
