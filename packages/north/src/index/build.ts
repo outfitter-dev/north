@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, rm } from "node:fs/promises";
 import { dirname, relative, resolve } from "node:path";
 import { findConfigFile, loadConfig } from "../config/loader.ts";
+import { resolveClassToTokenValidated } from "../lib/utility-classification.ts";
 import { extractClassTokens } from "../lint/extract.ts";
 import type { ClassSite } from "../lint/types.ts";
 import { parseCssTokens } from "./css.ts";
@@ -22,68 +23,6 @@ interface TokenGraphEntry {
 
 function normalizePath(path: string): string {
   return path.replace(/\\/g, "/");
-}
-
-function splitByDelimiter(input: string, delimiter: string): string[] {
-  const parts: string[] = [];
-  let current = "";
-  let bracketDepth = 0;
-  let parenDepth = 0;
-
-  for (let i = 0; i < input.length; i += 1) {
-    const char = input[i];
-    if (!char) {
-      continue;
-    }
-
-    if (char === "[") {
-      bracketDepth += 1;
-    } else if (char === "]") {
-      bracketDepth = Math.max(0, bracketDepth - 1);
-    } else if (char === "(") {
-      parenDepth += 1;
-    } else if (char === ")") {
-      parenDepth = Math.max(0, parenDepth - 1);
-    }
-
-    if (char === delimiter && bracketDepth === 0 && parenDepth === 0) {
-      parts.push(current);
-      current = "";
-      continue;
-    }
-
-    current += char;
-  }
-
-  parts.push(current);
-  return parts;
-}
-
-function getUtilitySegment(className: string): string {
-  const parts = splitByDelimiter(className, ":");
-  return parts[parts.length - 1] ?? className;
-}
-
-function resolveClassToToken(className: string, tokenNames: Set<string>): string | null {
-  const utility = getUtilitySegment(className);
-
-  const shorthandMatch = utility.match(/^[A-Za-z-]+-\((--[A-Za-z0-9-_]+)\)$/);
-  if (shorthandMatch?.[1]) {
-    return shorthandMatch[1];
-  }
-
-  const colorMatch = utility.match(
-    /^(bg|text|border|ring|fill|stroke)-([A-Za-z0-9-_]+)(?:\/[\d.]+)?$/
-  );
-  if (colorMatch?.[2]) {
-    const tokenName = `--color-${colorMatch[2]}`;
-    if (tokenNames.has(tokenName)) {
-      return tokenName;
-    }
-    return null;
-  }
-
-  return null;
 }
 
 function buildTokenGraph(dependencies: Map<string, Set<string>>): TokenGraphEntry[] {
@@ -283,7 +222,7 @@ export async function buildIndex(options: BuildIndexOptions = {}): Promise<Index
         line: token.line,
         column: token.column,
         className: token.value,
-        resolvedToken: resolveClassToToken(token.value, tokenNames),
+        resolvedToken: resolveClassToTokenValidated(token.value, tokenNames),
         context: token.context,
         component: null,
       });
