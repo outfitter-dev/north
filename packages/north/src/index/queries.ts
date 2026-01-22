@@ -88,6 +88,79 @@ export async function getIndexStatus(cwd: string, configOverride?: string): Prom
   };
 }
 
+/**
+ * Pattern summary returned by getTopPatterns
+ */
+export interface PatternSummary {
+  name: string;
+  count: number;
+  exampleClasses: string[];
+}
+
+/**
+ * Get top patterns from the index by occurrence count.
+ * Returns pattern name, count, and example classes.
+ */
+export async function getTopPatterns(
+  cwd: string,
+  configOverride?: string,
+  limit = 10
+): Promise<PatternSummary[]> {
+  const { config } = await loadProjectConfig(cwd, configOverride);
+  const indexPath = resolveIndexPath(cwd, config);
+
+  if (!(await fileExists(indexPath))) {
+    return [];
+  }
+
+  const db = await openIndexDatabase(indexPath);
+
+  // Query top patterns by count
+  const rows = db
+    .prepare("SELECT hash, classes, count FROM patterns ORDER BY count DESC LIMIT ?")
+    .all(limit) as Array<{
+    hash: string;
+    classes: string;
+    count: number;
+  }>;
+
+  db.close();
+
+  return rows.map((row, index) => {
+    const classes = JSON.parse(row.classes) as string[];
+    // Generate a readable name based on the classes
+    const name = generatePatternName(classes, index + 1);
+    return {
+      name,
+      count: row.count,
+      exampleClasses: classes.slice(0, 5), // Limit to 5 example classes
+    };
+  });
+}
+
+/**
+ * Generate a human-readable pattern name from its classes.
+ */
+function generatePatternName(classes: string[], index: number): string {
+  // Try to identify the pattern type based on class prefixes
+  const hasLayout = classes.some((c) => /^(flex|grid|block|inline|hidden)/.test(c));
+  const hasSpacing = classes.some((c) => /^(p-|m-|gap-|space-)/.test(c));
+  const hasColor = classes.some((c) => /^(bg-|text-|border-)/.test(c));
+  const hasSize = classes.some((c) => /^(w-|h-|min-|max-)/.test(c));
+
+  const parts: string[] = [];
+  if (hasLayout) parts.push("layout");
+  if (hasSpacing) parts.push("spacing");
+  if (hasColor) parts.push("color");
+  if (hasSize) parts.push("sizing");
+
+  if (parts.length === 0) {
+    return `pattern-${index}`;
+  }
+
+  return `${parts.join("-")}-${index}`;
+}
+
 export async function checkIndexFresh(
   cwd: string,
   configOverride?: string
