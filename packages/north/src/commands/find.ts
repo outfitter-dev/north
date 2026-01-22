@@ -128,6 +128,11 @@ interface ThemeVariantValue {
   source: string;
 }
 
+export interface CascadeLimits {
+  confidence: "full" | "partial";
+  missing?: string[];
+}
+
 export interface CascadeResult {
   selector: string;
   className?: string;
@@ -142,6 +147,7 @@ export interface CascadeResult {
   tokenDependencies?: {
     downstream: string[];
   };
+  limits: CascadeLimits;
 }
 
 const DEFAULT_LIMIT = 10;
@@ -638,6 +644,32 @@ export function buildCascade(db: IndexDatabase, selector: string, limit: number)
     }
   }
 
+  // Compute cascade limits - track what data might be missing
+  const missing: string[] = [];
+  if (!tokenDefinition) {
+    missing.push("token_definition");
+  }
+  // Only report missing theme variants if the feature is available in schema
+  if (!themeVariants && featureAvailable(schemaVersion, "tokenThemes")) {
+    missing.push("theme_variants");
+  }
+  if (!tokenDependencies) {
+    missing.push("token_dependencies");
+  }
+
+  // Check for schema limitations
+  const schemaLimitations: string[] = [];
+  if (!featureAvailable(schemaVersion, "tokenThemes")) {
+    schemaLimitations.push("token_themes (requires index rebuild)");
+  }
+
+  const limits: CascadeLimits = {
+    confidence: missing.length === 0 && schemaLimitations.length === 0 ? "full" : "partial",
+    missing: missing.length > 0 || schemaLimitations.length > 0
+      ? [...missing, ...schemaLimitations]
+      : undefined,
+  };
+
   return {
     selector: trimmed,
     className,
@@ -647,6 +679,7 @@ export function buildCascade(db: IndexDatabase, selector: string, limit: number)
     usages,
     themeVariants,
     tokenDependencies,
+    limits,
   };
 }
 
@@ -944,6 +977,15 @@ export async function find(options: FindOptions = {}): Promise<FindResult> {
           console.log(chalk.dim("\nDownstream dependencies:"));
           for (const token of result.tokenDependencies.downstream) {
             console.log(chalk.dim(`  - ${token}`));
+          }
+        }
+
+        // Display analysis limits
+        if (result.limits.confidence === "partial") {
+          console.log(chalk.dim("\nAnalysis limits:"));
+          console.log(chalk.yellow(`  Confidence: ${result.limits.confidence}`));
+          if (result.limits.missing && result.limits.missing.length > 0) {
+            console.log(chalk.dim(`  Missing: ${result.limits.missing.join(", ")}`));
           }
         }
       }

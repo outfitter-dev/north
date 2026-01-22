@@ -337,3 +337,113 @@ describe("buildCascade - downstream dependencies", () => {
     db.close();
   });
 });
+
+describe("buildCascade - confidence limits", () => {
+  test("returns full confidence when all data is present", () => {
+    const db = createTestDb();
+
+    // Insert token with definition
+    db.exec(
+      `INSERT INTO tokens (name, value, file, line) VALUES ('--color-primary', '#007bff', 'tokens.css', 10)`
+    );
+
+    // Insert theme variants
+    db.exec(
+      `INSERT INTO token_themes (token_name, theme, value, source) VALUES ('--color-primary', 'light', '#007bff', 'tokens.css:10')`
+    );
+    db.exec(
+      `INSERT INTO token_themes (token_name, theme, value, source) VALUES ('--color-primary', 'dark', '#0056b3', 'tokens.css:15')`
+    );
+
+    // Insert downstream dependency
+    db.exec(
+      `INSERT INTO token_graph (ancestor, descendant, depth, path) VALUES ('--color-primary', '--color-button', 1, '["--color-primary"]')`
+    );
+
+    const result = buildCascade(db, "--color-primary", 10);
+
+    expect(result.limits.confidence).toBe("full");
+    expect(result.limits.missing).toBeUndefined();
+
+    db.close();
+  });
+
+  test("returns partial confidence when token definition is missing", () => {
+    const db = createTestDb();
+
+    // Query for a token that doesn't exist
+    const result = buildCascade(db, "--color-unknown", 10);
+
+    expect(result.limits.confidence).toBe("partial");
+    expect(result.limits.missing).toContain("token_definition");
+
+    db.close();
+  });
+
+  test("returns partial confidence when theme variants are missing", () => {
+    const db = createTestDb();
+
+    // Insert token without theme variants
+    db.exec(
+      `INSERT INTO tokens (name, value, file, line) VALUES ('--spacing-md', '1rem', 'tokens.css', 20)`
+    );
+
+    const result = buildCascade(db, "--spacing-md", 10);
+
+    expect(result.limits.confidence).toBe("partial");
+    expect(result.limits.missing).toContain("theme_variants");
+
+    db.close();
+  });
+
+  test("returns partial confidence when downstream dependencies are missing", () => {
+    const db = createTestDb();
+
+    // Insert token with theme variants but no dependencies
+    db.exec(
+      `INSERT INTO tokens (name, value, file, line) VALUES ('--color-accent', '#ff0000', 'tokens.css', 30)`
+    );
+    db.exec(
+      `INSERT INTO token_themes (token_name, theme, value, source) VALUES ('--color-accent', 'light', '#ff0000', 'tokens.css:30')`
+    );
+    db.exec(
+      `INSERT INTO token_themes (token_name, theme, value, source) VALUES ('--color-accent', 'dark', '#cc0000', 'tokens.css:35')`
+    );
+
+    const result = buildCascade(db, "--color-accent", 10);
+
+    expect(result.limits.confidence).toBe("partial");
+    expect(result.limits.missing).toContain("token_dependencies");
+
+    db.close();
+  });
+
+  test("tracks multiple missing fields", () => {
+    const db = createTestDb();
+
+    // Insert token without theme variants or dependencies
+    db.exec(
+      `INSERT INTO tokens (name, value, file, line) VALUES ('--size-sm', '0.5rem', 'tokens.css', 40)`
+    );
+
+    const result = buildCascade(db, "--size-sm", 10);
+
+    expect(result.limits.confidence).toBe("partial");
+    expect(result.limits.missing).toContain("theme_variants");
+    expect(result.limits.missing).toContain("token_dependencies");
+    expect(result.limits.missing).not.toContain("token_definition");
+
+    db.close();
+  });
+
+  test("limits field is always present", () => {
+    const db = createTestDb();
+
+    const result = buildCascade(db, "--nonexistent", 10);
+
+    expect(result.limits).toBeDefined();
+    expect(result.limits.confidence).toBeDefined();
+
+    db.close();
+  });
+});
