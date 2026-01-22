@@ -99,3 +99,37 @@ export {
   executeClassifyTool,
   registerClassifyTool,
 } from "./classify-tool.ts";
+
+// Adopt tool (Tier 3)
+export {
+  type AdoptInput,
+  AdoptInputSchema,
+  type AdoptOptions,
+  type AdoptResponse,
+  type AdoptCandidateResult,
+  executeAdoptTool,
+  registerAdoptTool,
+} from "./adopt-tool.ts";
+
+// Propose tool (Tier 2)
+export {
+  type ProposeInput,
+  ProposeInputSchema,
+  type ProposeOptions,
+  type ProposeResponse,
+  type MigrationStepResult,
+  type MigrationActionResult,
+  executeProposeTool,
+  registerProposeTool,
+} from "./propose-tool.ts";
+
+// Migrate tool (Tier 2)
+export {
+  type MigrateInput,
+  MigrateInputSchema,
+  type MigrateOptions,
+  type MigrateResponse,
+  type StepResultOutput,
+  executeMigrateTool,
+  registerMigrateTool,
+} from "./migrate-tool.ts";
