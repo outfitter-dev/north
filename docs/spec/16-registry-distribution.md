@@ -28,6 +28,16 @@ North uses a shadcn-compatible registry format for distributing tokens, rules, a
 - Review changes before accepting
 - Once pulled, you own the code
 
+### Extends Sources
+
+North supports multiple preset sources:
+
+- In-repo presets: `extends: ["./presets/base.yaml"]`
+- npm packages: `extends: ["@myorg/north-base"]`
+- Registry URLs (direct or via `registry.url`): `extends: ["https://registry.myorg.com/north/base.json"]`
+
+When multiple presets are listed, they are applied in order and later layers win.
+
 ### Registry Item Types
 
 ```json
@@ -49,4 +59,3 @@ North uses a shadcn-compatible registry format for distributing tokens, rules, a
   }
 }
 ```
-

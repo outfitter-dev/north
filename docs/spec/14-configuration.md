@@ -7,8 +7,11 @@
 ```yaml
 # yaml-language-server: $schema=https://north.dev/schema.json
 
-# Extend from org or base
-extends: "@myorg/north-base"  # or null for standalone
+# Extend from local, npm, or registry presets (order matters, last wins)
+extends:
+  - "./presets/base.yaml"
+  - "@myorg/north-base"
+  # - "https://registry.myorg.com/north/base.json"
 
 # Style dials
 dials:
@@ -33,22 +36,23 @@ policy:
 # Rule configuration
 rules:
   # Hard errors (cannot be downgraded)
-  no-raw-palette: error
-  no-arbitrary-colors: error
-  no-arbitrary-values: error
-  
+  no-raw-palette:
+    level: error
+  no-arbitrary-colors:
+    level: error
+  no-arbitrary-values:
+    level: error
+
   # Configurable warnings
-  repeated-spacing-pattern:
-    level: warn
-    threshold: 3          # Flag after N occurrences
-    
   component-complexity:
     level: warn
-    max-classes: 15       # Raise/lower per project needs
-    
+    options:
+      max-classes: 15       # Raise/lower per project needs
+
   deviation-tracking:
     level: info
-    promote-threshold: 3  # Suggest system addition after N deviations
+    options:
+      promote-threshold: 3  # Suggest system addition after N deviations
 
 # Third-party component policy
 third-party:
@@ -72,4 +76,3 @@ registry:
   namespace: "@myorg"
   url: "https://registry.myorg.com/north/{name}.json"
 ```
-

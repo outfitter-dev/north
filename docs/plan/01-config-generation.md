@@ -18,7 +18,7 @@ This phase implements the configuration system and token generation engine. By t
 - [ ] Define `north.config.yaml` schema (TypeScript types + runtime validation)
 - [ ] Zod schema for config validation (TS types alone won't guard user YAML)
 - [ ] Config loader with validation
-- [ ] `extends` resolution (local files only for v0.1)
+- [ ] `extends` resolution (local files, npm packages, registry URLs; last-wins merge)
 - [ ] Dial defaults
 
 ### 1.2 Token Generation
@@ -101,5 +101,5 @@ Start building the doctor command early as a debugging aid during development. I
 
 - Config is the source of truth for the entire system
 - Generated files are derived artifacts (can be regenerated)
-- `extends` resolution is local files only for v0.1 (no remote/npm)
+- `extends` resolution supports local files, npm packages, and registry URLs; later layers win
 - Keep dial system simple initially - can expand later

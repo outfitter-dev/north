@@ -275,7 +275,7 @@ const classNames = root.findAll({
 - [ ] Define `north.config.yaml` schema (TypeScript types + runtime validation)
 - [ ] Zod schema for config validation (TS types alone won't guard user YAML)
 - [ ] Config loader with validation
-- [ ] `extends` resolution (local files only for v0.1)
+- [ ] `extends` resolution (local files, npm packages, registry URLs; last-wins merge)
 - [ ] Dial defaults
 
 #### 1.2 Token Generation
