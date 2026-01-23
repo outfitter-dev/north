@@ -1,6 +1,6 @@
 import { access } from "node:fs/promises";
-import { resolve } from "node:path";
-import { findConfigFile, loadConfig } from "../config/loader.ts";
+import { resolveConfigPath, resolveNorthPaths } from "../config/env.ts";
+import { loadConfig } from "../config/loader.ts";
 import { openIndexDatabase } from "./db.ts";
 import { collectSourceFiles, computeSourceHash, resolveIndexPath } from "./sources.ts";
 import type { IndexFreshness, IndexStatus } from "./types.ts";
@@ -15,17 +15,7 @@ async function fileExists(path: string): Promise<boolean> {
 }
 
 async function loadProjectConfig(cwd: string, configOverride?: string) {
-  if (configOverride) {
-    const configPath = resolve(cwd, configOverride);
-    const result = await loadConfig(configPath);
-    if (!result.success) {
-      throw new Error(result.error.message);
-    }
-
-    return { config: result.config, configPath };
-  }
-
-  const configPath = await findConfigFile(cwd);
+  const configPath = await resolveConfigPath(cwd, configOverride);
   if (!configPath) {
     throw new Error("Config file not found. Run 'north init' to initialize.");
   }
@@ -35,12 +25,14 @@ async function loadProjectConfig(cwd: string, configOverride?: string) {
     throw new Error(result.error.message);
   }
 
-  return { config: result.config, configPath };
+  const paths = resolveNorthPaths(configPath, cwd);
+
+  return { config: result.config, configPath, paths };
 }
 
 export async function getIndexStatus(cwd: string, configOverride?: string): Promise<IndexStatus> {
-  const { config } = await loadProjectConfig(cwd, configOverride);
-  const indexPath = resolveIndexPath(cwd, config);
+  const { config, paths } = await loadProjectConfig(cwd, configOverride);
+  const indexPath = resolveIndexPath(paths, config);
 
   if (!(await fileExists(indexPath))) {
     return {
@@ -106,8 +98,8 @@ export async function getTopPatterns(
   configOverride?: string,
   limit = 10
 ): Promise<PatternSummary[]> {
-  const { config } = await loadProjectConfig(cwd, configOverride);
-  const indexPath = resolveIndexPath(cwd, config);
+  const { config, paths } = await loadProjectConfig(cwd, configOverride);
+  const indexPath = resolveIndexPath(paths, config);
 
   if (!(await fileExists(indexPath))) {
     return [];
@@ -165,8 +157,8 @@ export async function checkIndexFresh(
   cwd: string,
   configOverride?: string
 ): Promise<IndexFreshness> {
-  const { config, configPath } = await loadProjectConfig(cwd, configOverride);
-  const indexPath = resolveIndexPath(cwd, config);
+  const { config, configPath, paths } = await loadProjectConfig(cwd, configOverride);
+  const indexPath = resolveIndexPath(paths, config);
 
   if (!(await fileExists(indexPath))) {
     return { fresh: false };
@@ -189,8 +181,8 @@ export async function checkIndexFresh(
     return { fresh: false };
   }
 
-  const { allFiles } = await collectSourceFiles(cwd, configPath);
-  const actual = await computeSourceHash(allFiles, cwd);
+  const { allFiles } = await collectSourceFiles(paths.projectRoot, configPath);
+  const actual = await computeSourceHash(allFiles, paths.projectRoot);
 
   return {
     fresh: expected === actual,

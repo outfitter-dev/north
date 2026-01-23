@@ -16,12 +16,12 @@ describe("executeRefactorTool", () => {
   });
 
   async function setupProject() {
-    // Create north/north.config.yaml
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml
+    const northDir = resolve(testDir, ".north");
     const rulesDir = resolve(northDir, "rules");
     await mkdir(rulesDir, { recursive: true });
 
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(
       configPath,
       `
@@ -290,11 +290,11 @@ describe("RefactorResponse structure", () => {
 
   test("has all required fields", async () => {
     // Create minimal setup
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     const rulesDir = resolve(northDir, "rules");
     await mkdir(rulesDir, { recursive: true });
 
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     await writeFile(

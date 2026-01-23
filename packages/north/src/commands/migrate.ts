@@ -9,6 +9,7 @@ import { copyFile, mkdir, readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import * as readline from "node:readline";
 import chalk from "chalk";
+import { resolveConfigPath, resolveNorthPaths } from "../config/env.ts";
 import { writeFileAtomic } from "../generation/file-writer.ts";
 import { buildIndex } from "../index/build.ts";
 import type { MigrationAction, MigrationPlan, MigrationStep } from "./propose.ts";
@@ -72,6 +73,7 @@ export interface MigrateReport {
   kind: "migrate";
   applied: boolean;
   planPath: string;
+  checkpointPath?: string;
   results: StepResult[];
   summary: {
     total: number;
@@ -90,9 +92,9 @@ export interface MigrateReport {
 // Constants
 // ============================================================================
 
-const DEFAULT_PLAN_PATH = ".north/migration-plan.json";
-const CHECKPOINT_PATH = ".north/migration-checkpoint.json";
-const BASE_CSS_FILE = "north/tokens/base.css";
+const DEFAULT_PLAN_FILENAME = "migration-plan.json";
+const DEFAULT_CHECKPOINT_FILENAME = "migration-checkpoint.json";
+const BASE_CSS_FILE = ".north/tokens/base.css";
 
 // ============================================================================
 // Helper Functions
@@ -633,7 +635,8 @@ function formatAppliedOutput(report: MigrateReport, showAllResults = false): str
 
   if (report.checkpoint) {
     lines.push("");
-    lines.push(chalk.dim(`Checkpoint saved: ${CHECKPOINT_PATH}`));
+    const checkpointDisplay = report.checkpointPath ?? DEFAULT_CHECKPOINT_FILENAME;
+    lines.push(chalk.dim(`Checkpoint saved: ${checkpointDisplay}`));
   }
 
   if (report.nextSteps && report.nextSteps.length > 0) {
@@ -653,8 +656,12 @@ function formatAppliedOutput(report: MigrateReport, showAllResults = false): str
 
 export async function migrate(options: MigrateOptions = {}): Promise<MigrateReport> {
   const cwd = options.cwd ?? process.cwd();
-  const planPath = options.plan ? resolve(cwd, options.plan) : resolve(cwd, DEFAULT_PLAN_PATH);
-  const checkpointPath = resolve(cwd, CHECKPOINT_PATH);
+  const configPath = await resolveConfigPath(cwd, options.config);
+  const paths = configPath ? resolveNorthPaths(configPath, cwd) : null;
+  const planPath = options.plan
+    ? resolve(cwd, options.plan)
+    : resolve(paths?.stateDir ?? cwd, DEFAULT_PLAN_FILENAME);
+  const checkpointPath = resolve(paths?.stateDir ?? cwd, DEFAULT_CHECKPOINT_FILENAME);
   const apply = options.apply === true;
   const dryRun = options.dryRun ?? !apply;
   const backup = options.backup !== false;
@@ -918,7 +925,7 @@ export async function migrate(options: MigrateOptions = {}): Promise<MigrateRepo
 
   // 7. Append utilities and tokens to base.css
   if (utilityBlocks.length > 0 || tokenDefinitions.length > 0) {
-    const baseCssPath = resolve(cwd, BASE_CSS_FILE);
+    const baseCssPath = paths?.baseTokensPath ?? resolve(cwd, BASE_CSS_FILE);
     try {
       let baseCss = await readFile(baseCssPath, "utf-8").catch(() => "");
 
@@ -939,7 +946,7 @@ export async function migrate(options: MigrateOptions = {}): Promise<MigrateRepo
       if (!options.quiet && !options.json) {
         console.log(
           chalk.yellow(
-            `Warning: Could not update ${BASE_CSS_FILE}: ${error instanceof Error ? error.message : String(error)}`
+            `Warning: Could not update ${baseCssPath}: ${error instanceof Error ? error.message : String(error)}`
           )
         );
       }
@@ -985,6 +992,7 @@ export async function migrate(options: MigrateOptions = {}): Promise<MigrateRepo
     kind: "migrate",
     applied: true,
     planPath,
+    checkpointPath,
     results,
     summary: {
       total: results.length,

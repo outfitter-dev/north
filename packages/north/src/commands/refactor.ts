@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { relative } from "node:path";
 import chalk from "chalk";
+import { resolveConfigPath, resolveNorthPaths } from "../config/env.ts";
 import { writeFileAtomic } from "../generation/file-writer.ts";
 import { type IndexDatabase, openIndexDatabase } from "../index/db.ts";
 import { checkIndexFresh, getIndexStatus } from "../index/queries.ts";
@@ -64,7 +65,6 @@ interface CascadeEntry {
 }
 
 const DEFAULT_LIMIT = 10;
-const BASE_CSS_FILE = "north/tokens/base.css";
 
 function clampLimit(limit?: number): number {
   if (!limit || Number.isNaN(limit)) {
@@ -92,6 +92,10 @@ function normalizeValue(raw: string): string {
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function normalizePath(path: string): string {
+  return path.replace(/\\/g, "/");
 }
 
 async function openIndex(cwd: string, configOverride?: string): Promise<IndexDatabase> {
@@ -192,13 +196,12 @@ function updateTokenValue(
   return { nextContent, matches };
 }
 
-async function applyRefactor(cwd: string, token: string, nextValue: string): Promise<void> {
-  const basePath = resolve(cwd, BASE_CSS_FILE);
+async function applyRefactor(basePath: string, token: string, nextValue: string): Promise<void> {
   const content = await readFile(basePath, "utf-8");
   const { nextContent, matches } = updateTokenValue(content, token, nextValue);
 
   if (matches === 0) {
-    throw new RefactorError(`Token '${token}' not found in ${BASE_CSS_FILE}.`);
+    throw new RefactorError(`Token '${token}' not found in ${basePath}.`);
   }
 
   if (nextContent !== content) {
@@ -251,6 +254,17 @@ export async function refactor(options: RefactorOptions = {}): Promise<RefactorR
   let db: IndexDatabase | null = null;
 
   try {
+    const configPath = await resolveConfigPath(cwd, options.config);
+    if (!configPath) {
+      return {
+        success: false,
+        message: "Config file not found",
+        error: new RefactorError("Config file not found. Run 'north init' to initialize."),
+      };
+    }
+    const paths = resolveNorthPaths(configPath, cwd);
+    const baseRelativePath = normalizePath(relative(paths.projectRoot, paths.baseTokensPath));
+
     const indexDb = await openIndex(cwd, options.config);
     db = indexDb;
 
@@ -268,7 +282,7 @@ export async function refactor(options: RefactorOptions = {}): Promise<RefactorR
     const cascadeEnabled = options.cascade !== false;
     const cascadeEntries = cascadeEnabled ? buildCascadeEntries(indexDb, token) : [];
 
-    const applyable = tokenRow.file === BASE_CSS_FILE;
+    const applyable = tokenRow.file === baseRelativePath;
 
     if (apply) {
       if (!applyable) {
@@ -277,7 +291,7 @@ export async function refactor(options: RefactorOptions = {}): Promise<RefactorR
         );
       }
 
-      await applyRefactor(cwd, token, nextValue);
+      await applyRefactor(paths.baseTokensPath, token, nextValue);
     }
 
     if (options.json) {
@@ -313,7 +327,7 @@ export async function refactor(options: RefactorOptions = {}): Promise<RefactorR
       if (!applyable) {
         console.log(
           chalk.yellow(
-            `Note: token is defined in ${tokenRow.file}; --apply only updates ${BASE_CSS_FILE}.`
+            `Note: token is defined in ${tokenRow.file}; --apply only updates ${baseRelativePath}.`
           )
         );
       }
@@ -345,7 +359,7 @@ export async function refactor(options: RefactorOptions = {}): Promise<RefactorR
       }
 
       if (apply) {
-        console.log(chalk.green(`\nUpdated ${BASE_CSS_FILE}`));
+        console.log(chalk.green(`\nUpdated ${baseRelativePath}`));
       } else if (dryRun) {
         console.log(chalk.dim("\nDry run only. Use --apply to update base.css."));
       }

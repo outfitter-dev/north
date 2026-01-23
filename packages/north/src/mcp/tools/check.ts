@@ -5,7 +5,7 @@
  * of North design rules. Returns structured violation data suitable for
  * AI-driven code refactoring.
  *
- * This is a Tier 2 tool - requires config (north.config.yaml) to be present.
+ * This is a Tier 2 tool - requires config (.north/config.yaml) to be present.
  *
  * @see .scratch/mcp-server/11-remaining-issues-execution-plan.md for specification
  * @issue #81
@@ -352,7 +352,7 @@ export async function executeCheckTool(
 /**
  * Register the north_check tool with the MCP server.
  *
- * This is a Tier 2 tool - requires config (north.config.yaml) to be present.
+ * This is a Tier 2 tool - requires config (.north/config.yaml) to be present.
  */
 export function registerCheckTool(server: McpServer): void {
   server.registerTool(

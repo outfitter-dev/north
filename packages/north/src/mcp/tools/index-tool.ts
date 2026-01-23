@@ -4,7 +4,7 @@
  * Explicit index build/refresh/status control for the North design system.
  * Provides control over the token index lifecycle.
  *
- * This is a Tier 2 tool - requires config (north.config.yaml) to be present,
+ * This is a Tier 2 tool - requires config (.north/config.yaml) to be present,
  * but does not require an existing index (since it creates one).
  *
  * @see .scratch/mcp-server/11-remaining-issues-execution-plan.md for specification
@@ -137,7 +137,7 @@ export async function executeIndexTool(
 /**
  * Register the north_index tool with the MCP server.
  *
- * This is a Tier 2 tool - requires config (.north/north.config.yaml) to be present,
+ * This is a Tier 2 tool - requires config (.north/config.yaml) to be present,
  * but does not require an existing index since it creates one.
  */
 export function registerIndexTool(server: McpServer): void {
@@ -191,7 +191,7 @@ export function registerIndexTool(server: McpServer): void {
                   error: "No North configuration found",
                   guidance: [
                     "Run 'north init' to initialize the project.",
-                    "This creates north/north.config.yaml with default settings.",
+                    "This creates .north/config.yaml with default settings.",
                   ],
                 },
                 null,

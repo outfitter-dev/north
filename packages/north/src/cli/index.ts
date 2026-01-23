@@ -196,7 +196,7 @@ program
   .option("--threshold <number>", "Similarity threshold (0-1)", Number.parseFloat)
   .option("--limit <number>", "Limit results", Number.parseInt)
   .option("--dry-run", "Preview changes only")
-  .option("--apply", "Write changes to north/tokens/base.css")
+  .option("--apply", "Write changes to .north/tokens/base.css")
   .option("--json", "Output JSON")
   .option("-q, --quiet", "Suppress output")
   .action(async (pattern, options) => {
@@ -233,7 +233,7 @@ program
   .option("--no-cascade", "Skip cascade analysis")
   .option("--limit <number>", "Limit results", Number.parseInt)
   .option("--dry-run", "Preview changes only")
-  .option("--apply", "Write changes to north/tokens/base.css")
+  .option("--apply", "Write changes to .north/tokens/base.css")
   .option("--json", "Output JSON")
   .option("-q, --quiet", "Suppress output")
   .action(async (token, options) => {
@@ -287,7 +287,7 @@ program
 program
   .command("migrate")
   .description("Execute a migration plan in batch")
-  .argument("[plan]", "Plan file path (default: .north/migration-plan.json)")
+  .argument("[plan]", "Plan file path (default: .north/state/migration-plan.json)")
   .option("-c, --config <path>", "Path to config file")
   .option("--steps <ids>", "Only execute specific step IDs (comma-separated)")
   .option("--skip <ids>", "Skip specific step IDs (comma-separated)")

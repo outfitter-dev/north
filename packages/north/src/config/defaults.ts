@@ -18,7 +18,7 @@ export const DEFAULT_DENSITY: DensityDial = "default";
 export const DEFAULT_CONTRAST: ContrastDial = "default";
 export const DEFAULT_TYPOGRAPHY_SCALE: TypographyScaleDial = "default";
 export const DEFAULT_COMPLEXITY: ComplexityDial = "progressive";
-export const DEFAULT_INDEX_PATH = ".north/index.db";
+export const DEFAULT_INDEX_PATH = "state/index.db";
 export const DEFAULT_INDEX_COMMITTABLE = false;
 
 // Typography measure defaults (characters per line)
@@ -176,7 +176,7 @@ rules:
 
 # Index configuration (optional)
 # index:
-#   path: .north/index.db
+#   path: state/index.db
 #   committable: false
 
 # Third-party component policy

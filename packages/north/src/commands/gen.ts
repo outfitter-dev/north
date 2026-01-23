@@ -1,6 +1,6 @@
-import { resolve } from "node:path";
 import chalk from "chalk";
-import { findConfigFile, loadConfig } from "../config/loader.ts";
+import { resolveConfigPath, resolveNorthPaths } from "../config/env.ts";
+import { loadConfig } from "../config/loader.ts";
 import type { ConfigLoadError, ConfigValidationError } from "../config/loader.ts";
 import { generateCSS } from "../generation/css-generator.ts";
 import { writeFileAtomic } from "../generation/file-writer.ts";
@@ -22,8 +22,6 @@ export class GenerateError extends Error {
 // ============================================================================
 // File Paths
 // ============================================================================
-
-const GENERATED_CSS_FILE = "north/tokens/generated.css";
 
 // ============================================================================
 // Generate Command
@@ -70,31 +68,24 @@ export async function generateTokens(options: GenerateOptions = {}): Promise<Gen
     }
 
     // Find or use specified config file
-    let configPath: string;
+    const configPath = await resolveConfigPath(cwd, options.config);
+    if (!configPath) {
+      const error = new GenerateError("Config file not found. Run 'north init' to initialize.");
+      if (!quiet) {
+        console.log(chalk.red("\n✗ Config file not found"));
+        console.log(chalk.dim("Run 'north init' to create .north/config.yaml"));
+      }
+      return {
+        success: false,
+        message: error.message,
+        error,
+      };
+    }
 
-    if (options.config) {
-      configPath = resolve(cwd, options.config);
-      if (!quiet) {
-        console.log(chalk.dim(`Using config: ${options.config}`));
-      }
-    } else {
-      const foundPath = await findConfigFile(cwd);
-      if (!foundPath) {
-        const error = new GenerateError("Config file not found. Run 'north init' to initialize.");
-        if (!quiet) {
-          console.log(chalk.red("\n✗ Config file not found"));
-          console.log(chalk.dim("Run 'north init' to create north/north.config.yaml"));
-        }
-        return {
-          success: false,
-          message: error.message,
-          error,
-        };
-      }
-      configPath = foundPath;
-      if (!quiet) {
-        console.log(chalk.dim(`Found config: ${configPath}`));
-      }
+    if (!quiet && options.config) {
+      console.log(chalk.dim(`Using config: ${options.config}`));
+    } else if (!quiet) {
+      console.log(chalk.dim(`Found config: ${configPath}`));
     }
 
     // Load and validate config
@@ -128,12 +119,12 @@ export async function generateTokens(options: GenerateOptions = {}): Promise<Gen
     const { content, checksum } = generateCSS(loadResult.config);
 
     // Write to file
-    const outputPath = resolve(cwd, GENERATED_CSS_FILE);
-    await writeFileAtomic(outputPath, content);
+    const paths = resolveNorthPaths(configPath, cwd);
+    await writeFileAtomic(paths.generatedTokensPath, content);
 
     if (!quiet) {
       console.log(`${chalk.green("✓")} Tokens generated`);
-      console.log(chalk.dim(`  Output: ${GENERATED_CSS_FILE}`));
+      console.log(chalk.dim(`  Output: ${paths.generatedTokensPath}`));
       console.log(chalk.dim(`  Checksum: ${checksum.slice(0, 16)}...`));
     }
 

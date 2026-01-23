@@ -3,7 +3,8 @@ import { access } from "node:fs/promises";
 import { resolve } from "node:path";
 import chalk from "chalk";
 import { minimatch } from "minimatch";
-import { findConfigFile, loadConfig } from "../config/loader.ts";
+import { resolveConfigPath, resolveNorthPaths } from "../config/env.ts";
+import { loadConfig } from "../config/loader.ts";
 import { openIndexDatabase } from "../index/db.ts";
 import { resolveIndexPath } from "../index/sources.ts";
 import { runLint } from "../lint/engine.ts";
@@ -59,7 +60,7 @@ async function queryRepeatedPatterns(
   }
   const severity = rule.severity as Exclude<RuleSeverity, "off">;
   // Try to find config and resolve index path
-  const configFile = configPath ? resolve(cwd, configPath) : await findConfigFile(cwd);
+  const configFile = await resolveConfigPath(cwd, configPath);
 
   if (!configFile) {
     return [];
@@ -70,7 +71,8 @@ async function queryRepeatedPatterns(
     return [];
   }
 
-  const indexPath = resolveIndexPath(cwd, configResult.config);
+  const paths = resolveNorthPaths(configFile, cwd);
+  const indexPath = resolveIndexPath(paths, configResult.config);
 
   // Check if index exists - skip gracefully if not
   try {

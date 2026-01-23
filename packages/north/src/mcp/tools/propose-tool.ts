@@ -4,7 +4,7 @@
  * Analyzes lint violations and generates a migration plan with actionable
  * steps to fix design system violations.
  *
- * This is a Tier 2 tool - requires config (north.config.yaml) to be present.
+ * This is a Tier 2 tool - requires config (.north/config.yaml) to be present.
  *
  * @see .scratch/mcp-server/14-cli-propose-spec.md for CLI specification
  */
@@ -27,8 +27,8 @@ export const ProposeInputSchema = z.object({
   output: z
     .string()
     .optional()
-    .default(".north/migration-plan.json")
-    .describe("Output path for the migration plan (default: .north/migration-plan.json)"),
+    .default(".north/state/migration-plan.json")
+    .describe("Output path for the migration plan (default: .north/state/migration-plan.json)"),
   strategy: z
     .enum(["conservative", "balanced", "aggressive"])
     .optional()
@@ -210,7 +210,7 @@ export async function executeProposeTool(
 /**
  * Register the north_propose tool with the MCP server.
  *
- * This is a Tier 2 tool - requires config (north.config.yaml) to be present.
+ * This is a Tier 2 tool - requires config (.north/config.yaml) to be present.
  */
 export function registerProposeTool(server: McpServer): void {
   server.registerTool(

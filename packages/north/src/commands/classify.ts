@@ -5,9 +5,9 @@
  */
 
 import { access } from "node:fs/promises";
-import { resolve } from "node:path";
 import { minimatch } from "minimatch";
-import { findConfigFile, loadConfig } from "../config/loader.ts";
+import { resolveConfigPath, resolveNorthPaths } from "../config/env.ts";
+import { loadConfig } from "../config/loader.ts";
 import { openIndexDatabase } from "../index/db.ts";
 import type { IndexDatabase } from "../index/db.ts";
 import { resolveIndexPath } from "../index/sources.ts";
@@ -91,10 +91,10 @@ export async function classify(options: ClassifyOptions = {}): Promise<ClassifyR
   if (!db) {
     // Open database from config
     const cwd = options.cwd ?? process.cwd();
-    const configFile = options.config ? resolve(cwd, options.config) : await findConfigFile(cwd);
+    const configFile = await resolveConfigPath(cwd, options.config);
 
     if (!configFile) {
-      throw new ClassifyError("No north.config.ts found. Run 'north init' to create one.");
+      throw new ClassifyError("No .north/config.yaml found. Run 'north init' to create one.");
     }
 
     const configResult = await loadConfig(configFile);
@@ -102,7 +102,8 @@ export async function classify(options: ClassifyOptions = {}): Promise<ClassifyR
       throw new ClassifyError(`Failed to load config: ${configResult.error}`, configResult.error);
     }
 
-    const indexPath = resolveIndexPath(cwd, configResult.config);
+    const paths = resolveNorthPaths(configFile, cwd);
+    const indexPath = resolveIndexPath(paths, configResult.config);
 
     // Check if index exists
     try {

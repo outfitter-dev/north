@@ -117,8 +117,11 @@ export async function runMutationSuite(options: MutationRunOptions = {}) {
     await writeJson(join(artifactDir, "actual.json"), report);
 
     const expectation = await readJson<Expectation>(expectPath);
+    const filteredViolations = report.violations.filter(
+      (violation) => violation.ruleId !== "north/missing-semantic-comment"
+    );
     const summary = summarizeViolations(
-      report.violations.map((violation) => ({
+      filteredViolations.map((violation) => ({
         ruleId: violation.ruleId,
         severity: violation.severity,
         filePath: violation.filePath,

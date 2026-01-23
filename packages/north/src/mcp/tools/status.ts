@@ -71,7 +71,7 @@ export interface StatusResponse {
   state: ServerState;
   /** Current working directory */
   cwd: string;
-  /** Path to north.config.yaml if found */
+  /** Path to .north/config.yaml if found */
   configPath: string | null;
   /** Path to index.db if found */
   indexPath: string | null;

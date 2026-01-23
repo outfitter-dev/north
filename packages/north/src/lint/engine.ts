@@ -2,7 +2,8 @@ import { readFile } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
 import { glob } from "glob";
 import { minimatch } from "minimatch";
-import { findConfigFile, loadConfig } from "../config/loader.ts";
+import { resolveConfigPath, resolveNorthPaths } from "../config/env.ts";
+import { loadConfig } from "../config/loader.ts";
 import type { NorthConfig } from "../config/schema.ts";
 import {
   isArbitraryColorUtility,
@@ -228,17 +229,7 @@ function sortIssues(issues: LintIssue[]): LintIssue[] {
 }
 
 async function loadProjectConfig(cwd: string, configOverride?: string) {
-  if (configOverride) {
-    const configPath = resolve(cwd, configOverride);
-    const result = await loadConfig(configPath);
-    if (!result.success) {
-      throw new LintError(result.error.message, result.error);
-    }
-
-    return { config: result.config, configPath };
-  }
-
-  const configPath = await findConfigFile(cwd);
+  const configPath = await resolveConfigPath(cwd, configOverride);
   if (!configPath) {
     throw new LintError("Config file not found. Run 'north init' to initialize.");
   }
@@ -248,21 +239,23 @@ async function loadProjectConfig(cwd: string, configOverride?: string) {
     throw new LintError(result.error.message, result.error);
   }
 
-  return { config: result.config, configPath };
+  const paths = resolveNorthPaths(configPath, cwd);
+
+  return { config: result.config, configPath, paths };
 }
 
 async function listFiles(
-  cwd: string,
+  rootDir: string,
   config: NorthConfig,
   fileOverrides?: string[]
 ): Promise<string[]> {
   if (fileOverrides && fileOverrides.length > 0) {
-    return fileOverrides.map((file) => (isAbsolute(file) ? file : resolve(cwd, file)));
+    return fileOverrides.map((file) => (isAbsolute(file) ? file : resolve(rootDir, file)));
   }
 
   const ignorePatterns = getIgnorePatterns(config);
   const files = await glob("**/*.{tsx,jsx}", {
-    cwd,
+    cwd: rootDir,
     absolute: true,
     nodir: true,
     ignore: ignorePatterns,
@@ -447,19 +440,19 @@ function scanInlineColorStyles(source: string, filePath: string, config: NorthCo
 
 export async function runLint(options: LintOptions = {}): Promise<LintRun> {
   const cwd = options.cwd ?? process.cwd();
-  const { config, configPath } = await loadProjectConfig(cwd, options.configPath);
+  const { config, configPath, paths } = await loadProjectConfig(cwd, options.configPath);
 
   const rulesDir = resolve(configPath, "..", "rules");
   const rules = await loadRules(rulesDir, config);
 
-  const files = await listFiles(cwd, config, options.files);
+  const files = await listFiles(paths.projectRoot, config, options.files);
   const extractionResults: ExtractionResult[] = [];
   const rawIssues: LintIssue[] = [];
   const allDeviations: Deviation[] = [];
   const allCandidates: Candidate[] = [];
 
   for (const file of files) {
-    const displayPath = relative(cwd, file) || file;
+    const displayPath = relative(paths.projectRoot, file) || file;
     try {
       const source = await readFile(file, "utf-8");
       const extraction = extractClassTokens(source, displayPath, {

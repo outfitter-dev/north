@@ -4,7 +4,7 @@
  * Given a file location or violation, suggests appropriate semantic tokens
  * to replace raw values or arbitrary utilities.
  *
- * This is a Tier 2 tool - requires config (north.config.yaml) to be present.
+ * This is a Tier 2 tool - requires config (.north/config.yaml) to be present.
  *
  * @see .scratch/mcp-server/11-remaining-issues-execution-plan.md for specification
  * @issue #82
@@ -466,7 +466,7 @@ export async function executeSuggestTool(
 /**
  * Register the north_suggest tool with the MCP server.
  *
- * This is a Tier 2 tool - requires config (north.config.yaml) to be present.
+ * This is a Tier 2 tool - requires config (.north/config.yaml) to be present.
  */
 export function registerSuggestTool(server: McpServer): void {
   server.registerTool(

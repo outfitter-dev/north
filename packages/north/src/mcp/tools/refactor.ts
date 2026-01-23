@@ -4,7 +4,7 @@
  * Identifies candidates for refactoring to use design tokens.
  * Generates migration plans and suggests token replacements.
  *
- * This is a Tier 3 tool - requires index (.north/index.db) to be present.
+ * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
 
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -329,7 +329,7 @@ export async function executeRefactorTool(
 /**
  * Register the north_refactor tool with the MCP server.
  *
- * This is a Tier 3 tool - requires index (.north/index.db) to be present.
+ * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
 export function registerRefactorTool(server: McpServer): void {
   server.registerTool(

@@ -54,11 +54,11 @@ describe("executeCheckTool", () => {
   });
 
   test("returns check response when config exists and no violations", async () => {
-    // Create north/north.config.yaml
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml
+    const northDir = resolve(testDir, ".north");
     const rulesDir = resolve(northDir, "rules");
     await mkdir(rulesDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(
       configPath,
       `compatibility:
@@ -92,11 +92,11 @@ describe("executeCheckTool", () => {
   });
 
   test("detects no-raw-palette violation", async () => {
-    // Create north/north.config.yaml and rules
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml and rules
+    const northDir = resolve(testDir, ".north");
     const rulesDir = resolve(northDir, "rules");
     await mkdir(rulesDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(
       configPath,
       `compatibility:
@@ -129,11 +129,11 @@ describe("executeCheckTool", () => {
   });
 
   test("filters violations by rules parameter", async () => {
-    // Create north/north.config.yaml and rules
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml and rules
+    const northDir = resolve(testDir, ".north");
     const rulesDir = resolve(northDir, "rules");
     await mkdir(rulesDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(
       configPath,
       `compatibility:
@@ -178,11 +178,11 @@ rule:
   });
 
   test("includes fix suggestions when fix=true", async () => {
-    // Create north/north.config.yaml and rules
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml and rules
+    const northDir = resolve(testDir, ".north");
     const rulesDir = resolve(northDir, "rules");
     await mkdir(rulesDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(
       configPath,
       `compatibility:
@@ -215,11 +215,11 @@ rule:
   });
 
   test("does not include fix suggestions when fix=false", async () => {
-    // Create north/north.config.yaml and rules
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml and rules
+    const northDir = resolve(testDir, ".north");
     const rulesDir = resolve(northDir, "rules");
     await mkdir(rulesDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(
       configPath,
       `compatibility:
@@ -251,11 +251,11 @@ rule:
   });
 
   test("returns response when no files are provided", async () => {
-    // Create north/north.config.yaml
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml
+    const northDir = resolve(testDir, ".north");
     const rulesDir = resolve(northDir, "rules");
     await mkdir(rulesDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(
       configPath,
       `compatibility:
@@ -289,10 +289,10 @@ describe("CheckResponse structure", () => {
   });
 
   test("has all required fields", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     const rulesDir = resolve(northDir, "rules");
     await mkdir(rulesDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     // Create placeholder rule
@@ -343,10 +343,10 @@ describe("CheckViolation structure", () => {
   });
 
   test("violation has all required fields", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     const rulesDir = resolve(northDir, "rules");
     await mkdir(rulesDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     await writeFile(

@@ -64,7 +64,7 @@ describe("MigrateOptions structure", () => {
     const options: MigrateOptions = {
       cwd: "/path/to/project",
       config: "custom.config.yaml",
-      plan: ".north/migration-plan.json",
+      plan: ".north/state/migration-plan.json",
       steps: ["step-001", "step-002"],
       skip: ["step-003"],
       file: "src/components/Button.tsx",
@@ -155,7 +155,7 @@ describe("StepResult structure", () => {
 describe("MigrationCheckpoint structure", () => {
   test("checkpoint has required fields", () => {
     const checkpoint: MigrationCheckpoint = {
-      planPath: ".north/migration-plan.json",
+      planPath: ".north/state/migration-plan.json",
       planHash: "sha256:abc123def456",
       completedSteps: ["step-001", "step-002"],
       failedSteps: ["step-003"],
@@ -163,7 +163,7 @@ describe("MigrationCheckpoint structure", () => {
       lastUpdated: new Date().toISOString(),
     };
 
-    expect(checkpoint.planPath).toBe(".north/migration-plan.json");
+    expect(checkpoint.planPath).toBe(".north/state/migration-plan.json");
     expect(checkpoint.planHash).toMatch(/^sha256:/);
     expect(checkpoint.completedSteps).toHaveLength(2);
     expect(checkpoint.failedSteps).toHaveLength(1);
@@ -180,7 +180,7 @@ describe("MigrateReport structure", () => {
     const report: MigrateReport = {
       kind: "migrate",
       applied: true,
-      planPath: ".north/migration-plan.json",
+      planPath: ".north/state/migration-plan.json",
       results: [],
       summary: {
         total: 10,
@@ -202,7 +202,7 @@ describe("MigrateReport structure", () => {
     const report: MigrateReport = {
       kind: "migrate",
       applied: true,
-      planPath: ".north/migration-plan.json",
+      planPath: ".north/state/migration-plan.json",
       results: [],
       summary: {
         total: 0,
@@ -214,7 +214,7 @@ describe("MigrateReport structure", () => {
         linesAdded: 0,
       },
       checkpoint: {
-        planPath: ".north/migration-plan.json",
+        planPath: ".north/state/migration-plan.json",
         planHash: "sha256:abc123",
         completedSteps: [],
         failedSteps: [],
@@ -231,7 +231,7 @@ describe("MigrateReport structure", () => {
     const report: MigrateReport = {
       kind: "migrate",
       applied: true,
-      planPath: ".north/migration-plan.json",
+      planPath: ".north/state/migration-plan.json",
       results: [],
       summary: {
         total: 0,

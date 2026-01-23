@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
 import chalk from "chalk";
+import { resolveConfigPath, resolveNorthPaths } from "../config/env.ts";
 import { writeFileAtomic } from "../generation/file-writer.ts";
 import { type IndexDatabase, openIndexDatabase } from "../index/db.ts";
 import { checkIndexFresh, getIndexStatus } from "../index/queries.ts";
@@ -80,7 +80,6 @@ interface PromoteReport {
 
 const DEFAULT_THRESHOLD = 0.8;
 const DEFAULT_LIMIT = 10;
-const BASE_CSS_FILE = "north/tokens/base.css";
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -363,14 +362,20 @@ async function applyPromotion(
   cwd: string,
   name: string,
   pattern: string,
-  themeAdditions: ThemeAddition[]
+  themeAdditions: ThemeAddition[],
+  configOverride?: string
 ): Promise<void> {
-  const basePath = resolve(cwd, BASE_CSS_FILE);
+  const configPath = await resolveConfigPath(cwd, configOverride);
+  if (!configPath) {
+    throw new PromoteError("Config file not found. Run 'north init' to initialize.");
+  }
+  const paths = resolveNorthPaths(configPath, cwd);
+  const basePath = paths.baseTokensPath;
   const content = await readFile(basePath, "utf-8");
 
   const utilityRegex = new RegExp(`@utility\\s+${escapeRegExp(name)}\\b`);
   if (utilityRegex.test(content)) {
-    throw new PromoteError(`Utility '${name}' already exists in ${BASE_CSS_FILE}.`);
+    throw new PromoteError(`Utility '${name}' already exists in ${basePath}.`);
   }
 
   const sections: string[] = [];
@@ -453,7 +458,7 @@ export async function promote(options: PromoteOptions = {}): Promise<PromoteResu
     };
 
     if (apply) {
-      await applyPromotion(cwd, name, pattern, themeAdditions);
+      await applyPromotion(cwd, name, pattern, themeAdditions, options.config);
     }
 
     if (options.json) {
@@ -505,7 +510,7 @@ export async function promote(options: PromoteOptions = {}): Promise<PromoteResu
       }
 
       if (apply) {
-        console.log(chalk.green("\nApplied promotion to north/tokens/base.css"));
+        console.log(chalk.green("\nApplied promotion to .north/tokens/base.css"));
       } else if (dryRun) {
         console.log(chalk.dim("\nDry run only. Use --apply to write base.css."));
       }

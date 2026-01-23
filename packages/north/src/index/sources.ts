@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { relative, resolve } from "node:path";
 import { glob } from "glob";
-import { findConfigFile } from "../config/loader.ts";
+import type { NorthPaths } from "../config/env.ts";
 import type { NorthConfig } from "../config/schema.ts";
 import { getIndexIgnorePatterns } from "../lint/ignores.ts";
 
@@ -13,38 +13,36 @@ export interface SourceFiles {
   allFiles: string[];
 }
 
-export function resolveIndexPath(cwd: string, config: NorthConfig): string {
-  const indexPath = config.index?.path ?? ".north/index.db";
-  return resolve(cwd, indexPath);
+export function resolveIndexPath(paths: NorthPaths, config: NorthConfig): string {
+  const indexPath = config.index?.path ?? "state/index.db";
+  return resolve(paths.northDir, indexPath);
 }
 
-export async function collectSourceFiles(cwd: string, configPath?: string): Promise<SourceFiles> {
-  const resolvedConfigPath = configPath ?? (await findConfigFile(cwd));
-  if (!resolvedConfigPath) {
-    throw new Error("Config file not found. Run 'north init' to initialize.");
-  }
-
+export async function collectSourceFiles(
+  projectRoot: string,
+  configPath: string
+): Promise<SourceFiles> {
   const ignorePatterns = getIndexIgnorePatterns();
 
   const [tsxFiles, cssFiles] = await Promise.all([
     glob("**/*.{tsx,jsx}", {
-      cwd,
+      cwd: projectRoot,
       absolute: true,
       nodir: true,
       ignore: ignorePatterns,
     }),
     glob("**/*.css", {
-      cwd,
+      cwd: projectRoot,
       absolute: true,
       nodir: true,
       ignore: ignorePatterns,
     }),
   ]);
 
-  const allFiles = Array.from(new Set([resolvedConfigPath, ...tsxFiles, ...cssFiles])).sort();
+  const allFiles = Array.from(new Set([configPath, ...tsxFiles, ...cssFiles])).sort();
 
   return {
-    configPath: resolvedConfigPath,
+    configPath,
     tsxFiles: [...tsxFiles].sort(),
     cssFiles: [...cssFiles].sort(),
     allFiles,

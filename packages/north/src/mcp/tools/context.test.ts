@@ -18,10 +18,10 @@ describe("executeContextTool", () => {
   });
 
   test("returns context payload when config exists", async () => {
-    // Create north/north.config.yaml
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(
       configPath,
       `
@@ -48,10 +48,10 @@ dials:
   });
 
   test("returns compact payload when compact is true", async () => {
-    // Create north/north.config.yaml
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(
       configPath,
       `
@@ -67,10 +67,10 @@ compatibility:
   });
 
   test("includes rule summary from config", async () => {
-    // Create north/north.config.yaml with rules
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml with rules
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(
       configPath,
       `
@@ -91,10 +91,10 @@ rules:
   });
 
   test("includes deviation tracking guidance when rule is enabled", async () => {
-    // Create north/north.config.yaml with deviation-tracking rule
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml with deviation-tracking rule
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(
       configPath,
       `
@@ -112,10 +112,10 @@ rules:
   });
 
   test("includes index status in payload", async () => {
-    // Create north/north.config.yaml
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(
       configPath,
       `
@@ -127,7 +127,7 @@ compatibility:
     const payload = await executeContextTool(testDir, configPath, false);
 
     expect(payload.index).toBeDefined();
-    expect(payload.index.path).toContain(".north/index.db");
+    expect(payload.index.path).toContain(".north/state/index.db");
     expect(payload.index.exists).toBe(false);
     expect(payload.index.fresh).toBe(false);
     // Verify index counts has expected zero values
@@ -137,10 +137,10 @@ compatibility:
   });
 
   test("includes project paths in payload", async () => {
-    // Create north/north.config.yaml
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(
       configPath,
       `
@@ -152,18 +152,18 @@ compatibility:
     const payload = await executeContextTool(testDir, configPath, false);
 
     expect(payload.project.configPath).toBe(configPath);
-    expect(payload.project.generatedTokens).toContain("north/tokens/generated.css");
-    expect(payload.project.baseTokens).toContain("north/tokens/base.css");
+    expect(payload.project.generatedTokens).toContain(".north/tokens/generated.css");
+    expect(payload.project.baseTokens).toContain(".north/tokens/base.css");
     expect(payload.project.generatedExists).toBe(false);
     expect(payload.project.baseExists).toBe(false);
   });
 
   test("detects generated token files when they exist", async () => {
-    // Create north/north.config.yaml
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml
+    const northDir = resolve(testDir, ".north");
     const tokensDir = resolve(northDir, "tokens");
     await mkdir(tokensDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(
       configPath,
       `
@@ -183,10 +183,10 @@ compatibility:
   });
 
   test("throws error when config file is invalid", async () => {
-    // Create north/north.config.yaml with invalid content
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml with invalid content
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "invalid: yaml: content:");
 
     await expect(executeContextTool(testDir, configPath, false)).rejects.toThrow();
@@ -206,9 +206,9 @@ describe("ContextPayload structure", () => {
   });
 
   test("has all required fields", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const payload: ContextPayload = await executeContextTool(testDir, configPath, false);

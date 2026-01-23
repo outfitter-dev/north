@@ -66,8 +66,8 @@ If north_status shows state='none', suggest running 'north init' first.
 /**
  * Tool tier definition.
  * - Tier 1: Always available (no config needed)
- * - Tier 2: Requires config (north.config.yaml)
- * - Tier 3: Requires index (.north/index.db)
+ * - Tier 2: Requires config (.north/config.yaml)
+ * - Tier 3: Requires index (.north/state/index.db)
  */
 export interface TieredTool {
   name: string;
