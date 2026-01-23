@@ -3,7 +3,7 @@
   "args": [
     "harness/utils/lint-runner.ts",
     "--config",
-    "north/north.config.yaml",
+    ".north/config.yaml",
     "--files",
     "fixtures/harness/app/[slug]/page.tsx",
     "--files",

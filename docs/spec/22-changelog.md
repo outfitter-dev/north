@@ -2,10 +2,10 @@
 
 ### 0.1.0-draft-8 (January 2025)
 - **Generated CSS now committed:** Removed from .gitignore, enables "diff the token changes" workflow in PRs
-- **Directory convention clarified:** `north/` for source of truth, `.north/` for cache/derived data
+- **Directory convention clarified:** `.north/` for source of truth, `.north/state/` for cache/derived data
 - **Install story standardized:** npx/bunx is blessed path, removed curl install script from examples
 - **Rule names standardized:** Fixed remaining `no-magic-numbers` and `no-numeric-spacing` references to canonical `no-arbitrary-values`
-- **Path format normalized:** Consistent `north/` (no leading `./`)
+- **Path format normalized:** Consistent `.north/` (no leading `./`)
 
 ### 0.1.0-draft-7 (January 2025)
 - **Fixed CLI distribution contradiction:** Changed "binary distribution" to "zero-install distribution" (npx/bunx)

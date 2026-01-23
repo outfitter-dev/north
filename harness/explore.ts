@@ -113,13 +113,13 @@ async function renderNorthxScript(options: { logRoot: string; cliPath: string })
 }
 
 async function ensureNorthConfig(workDir: string) {
-  const configPath = resolve(workDir, "north", "north.config.yaml");
+  const configPath = resolve(workDir, ".north", "config.yaml");
   if (await pathExists(configPath)) {
     return;
   }
 
-  const fixtureDir = repoPath("harness", "fixtures", "north", "north");
-  await copyDir(fixtureDir, resolve(workDir, "north"));
+  const fixtureDir = repoPath("harness", "fixtures", "north", ".north");
+  await copyDir(fixtureDir, resolve(workDir, ".north"));
 }
 
 interface SessionIndexEntry {
@@ -245,7 +245,7 @@ async function runCommandOnce(workDir: string, logDir: string, args: string[]) {
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const sessionId = options.session ?? timestamp();
-  const { workDir, logRoot, repoName, sha } = await setupRepo(options, sessionId);
+  const { workDir, logRoot } = await setupRepo(options, sessionId);
 
   console.log(`Repo ready: ${workDir}`);
   console.log(`Session: ${sessionId}`);

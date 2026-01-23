@@ -51,7 +51,7 @@ north-repo/                       # Repo root (not "north/" to avoid confusion)
 │       │       ├── hash.ts
 │       │       └── format.ts
 │       ├── templates/            # Scaffolding templates
-│       │   ├── north.config.yaml
+│       │   ├── .north/config.yaml
 │       │   ├── tokens/
 │       │   │   └── base.css
 │       │   └── rules/
@@ -272,7 +272,7 @@ const classNames = root.findAll({
 
 #### 1.1 Config System
 
-- [ ] Define `north.config.yaml` schema (TypeScript types + runtime validation)
+- [ ] Define `.north/config.yaml` schema (TypeScript types + runtime validation)
 - [ ] Zod schema for config validation (TS types alone won't guard user YAML)
 - [ ] Config loader with validation
 - [ ] `extends` resolution (local files, npm packages, registry URLs; last-wins merge)
@@ -288,7 +288,7 @@ const classNames = root.findAll({
 #### 1.3 Init Command
 
 - [ ] `north init` scaffolds `north/` directory
-- [ ] Creates default `north.config.yaml`
+- [ ] Creates default `.north/config.yaml`
 - [ ] Creates `north/tokens/base.css`
 - [ ] Runs initial `north gen`
 

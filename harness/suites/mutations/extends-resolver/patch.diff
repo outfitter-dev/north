@@ -35,10 +35,10 @@ index 0000000..127402c
 +    level: warn
 +    options:
 +      max-classes: 2
-diff --git a/north/north.config.yaml b/north/north.config.yaml
+diff --git a/.north/config.yaml b/.north/config.yaml
 index 5572626..a3750d7 100644
---- a/north/north.config.yaml
-+++ b/north/north.config.yaml
+--- a/.north/config.yaml
++++ b/.north/config.yaml
 @@ -1,4 +1,7 @@
 -extends: null
 +extends:
@@ -55,22 +55,22 @@ index 5572626..a3750d7 100644
 +registry:
 +  url: 'data:application/json,{"preset":"{name}","rules":{"repeated-spacing-pattern":{"level":"warn","options":{"allow-after-line-start":false}}}}'
 +
-diff --git a/north/presets/local.yaml b/north/presets/local.yaml
+diff --git a/.north/presets/local.yaml b/.north/presets/local.yaml
 new file mode 100644
 index 0000000..24c34ab
 --- /dev/null
-+++ b/north/presets/local.yaml
++++ b/.north/presets/local.yaml
 @@ -0,0 +1,5 @@
 +extends: null
 +
 +rules:
 +  local-preset:
 +    level: error
-diff --git a/north/rules/local-preset.yaml b/north/rules/local-preset.yaml
+diff --git a/.north/rules/local-preset.yaml b/.north/rules/local-preset.yaml
 new file mode 100644
 index 0000000..7a40cea
 --- /dev/null
-+++ b/north/rules/local-preset.yaml
++++ b/.north/rules/local-preset.yaml
 @@ -0,0 +1,7 @@
 +id: north/local-preset
 +language: tsx

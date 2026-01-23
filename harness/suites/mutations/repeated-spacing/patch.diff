@@ -1,7 +1,7 @@
-diff --git a/north/north.config.yaml b/north/north.config.yaml
+diff --git a/.north/config.yaml b/.north/config.yaml
 index 220f29f..9cfe1d0 100644
---- a/north/north.config.yaml
-+++ b/north/north.config.yaml
+--- a/.north/config.yaml
++++ b/.north/config.yaml
 @@ -7,6 +7,10 @@ rules:
    no-arbitrary-colors:
      level: error

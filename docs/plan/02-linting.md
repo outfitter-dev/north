@@ -55,7 +55,7 @@ Extract literal string fragments from:
 
 ### 2.2 ast-grep Integration
 
-- [ ] Load rules from `north/rules/`
+- [ ] Load rules from `.north/rules/`
 - [ ] Parse TSX/JSX files
 - [ ] Apply extraction contract
 - [ ] Collect violations with file/line/column

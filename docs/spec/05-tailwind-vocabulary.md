@@ -96,7 +96,7 @@ North enforcement varies based on where code lives. This enables "numeric spacin
 | numeric-spacing | error | warn | allowed |
 | component-complexity | warn (10) | warn (15) | warn (20) |
 
-Configure in `north.config.yaml`:
+Configure in `.north/config.yaml`:
 ```yaml
 context:
   paths:
