@@ -88,6 +88,9 @@ jobs:
       - name: Run tests
         run: bun run test
 
+      - name: North doctor + golden project smoke
+        run: bun run --cwd packages/north smoke:golden
+
   harness-mutations:
     name: Harness (Mutations)
     runs-on: ubuntu-latest
