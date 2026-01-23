@@ -1,0 +1,15 @@
+# Golden project fixture (minimal North config)
+dials:
+  radius: md
+  shadows: subtle
+  density: default
+  contrast: default
+
+typography:
+  scale: default
+  measure:
+    min: 45
+    max: 75
+
+policy:
+  complexity: progressive

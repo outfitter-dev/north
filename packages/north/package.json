@@ -22,7 +22,8 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "check": "biome check --write .",
-    "test": "bun test"
+    "test": "bun test",
+    "smoke:golden": "bun run ./scripts/golden-smoke.ts"
   },
   "dependencies": {
     "@ast-grep/napi": "^0.40.5",
