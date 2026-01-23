@@ -1,0 +1,27 @@
+diff --git a/north/north.config.yaml b/north/north.config.yaml
+index 220f29f..9cfe1d0 100644
+--- a/north/north.config.yaml
++++ b/north/north.config.yaml
+@@ -7,6 +7,10 @@ rules:
+   no-arbitrary-colors:
+     level: error
+   no-arbitrary-values:
+     level: error
++  repeated-spacing-pattern:
++    level: warn
++    options:
++      allow-in-comments: false
+   missing-semantic-comment:
+     level: off
+ 
+ lint:
+diff --git a/fixtures/harness/repeated-spacing.tsx b/fixtures/harness/repeated-spacing.tsx
+new file mode 100644
+index 0000000..54a05dd
+--- /dev/null
++++ b/fixtures/harness/repeated-spacing.tsx
+@@ -0,0 +1,4 @@
++export function RepeatedSpacingFixture() {
++  // repeated  spacing
++  return <div className="flex">Spacing</div>;
++}
