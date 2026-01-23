@@ -1,7 +1,8 @@
 import { access, readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import chalk from "chalk";
-import { findConfigFile, loadConfig } from "../config/loader.ts";
+import { resolveConfigPath, resolveNorthPaths } from "../config/env.ts";
+import { loadConfig } from "../config/loader.ts";
 import type { NorthConfig } from "../config/schema.ts";
 import { generateShadcnAliases } from "../generation/colors.ts";
 import { verifyChecksum } from "../generation/css-generator.ts";
@@ -223,13 +224,13 @@ export async function doctor(options: DoctorOptions = {}): Promise<DoctorResult>
 
   log(chalk.dim("Checking configuration file..."));
 
-  configPath = await findConfigFile(cwd);
+  configPath = await resolveConfigPath(cwd);
 
   if (!configPath) {
     const check = {
       name: "Config file",
       status: "error",
-      message: "north/north.config.yaml not found. Run 'north init' first.",
+      message: ".north/config.yaml not found. Run 'north init' first.",
     } satisfies Check;
     pushCheck(checks, check);
     logCheck(log, check);
@@ -292,14 +293,15 @@ export async function doctor(options: DoctorOptions = {}): Promise<DoctorResult>
 
   log(chalk.dim("\nChecking generated tokens..."));
 
-  const generatedPath = resolve(cwd, "north/tokens/generated.css");
+  const paths = configPath ? resolveNorthPaths(configPath, cwd) : null;
+  const generatedPath = paths?.generatedTokensPath ?? resolve(cwd, ".north/tokens/generated.css");
   const generatedExists = await fileExists(generatedPath);
 
   if (!generatedExists) {
     const check = {
       name: "Generated tokens",
       status: "error",
-      message: "north/tokens/generated.css not found. Run 'north gen' to generate.",
+      message: ".north/tokens/generated.css not found. Run 'north gen' to generate.",
     } satisfies Check;
     pushCheck(checks, check);
     logCheck(log, check);
@@ -307,7 +309,7 @@ export async function doctor(options: DoctorOptions = {}): Promise<DoctorResult>
     const check = {
       name: "Generated tokens",
       status: "ok",
-      message: "north/tokens/generated.css exists",
+      message: ".north/tokens/generated.css exists",
     } satisfies Check;
     pushCheck(checks, check);
     logCheck(log, check);
@@ -359,14 +361,14 @@ export async function doctor(options: DoctorOptions = {}): Promise<DoctorResult>
 
   log(chalk.dim("\nChecking base tokens..."));
 
-  const basePath = resolve(cwd, "north/tokens/base.css");
+  const basePath = paths?.baseTokensPath ?? resolve(cwd, ".north/tokens/base.css");
   const baseExists = await fileExists(basePath);
 
   if (!baseExists) {
     const check = {
       name: "Base tokens",
       status: "warn",
-      message: "north/tokens/base.css not found. This file should exist for custom tokens.",
+      message: ".north/tokens/base.css not found. This file should exist for custom tokens.",
     } satisfies Check;
     pushCheck(checks, check);
     logCheck(log, check);
@@ -374,7 +376,7 @@ export async function doctor(options: DoctorOptions = {}): Promise<DoctorResult>
     const check = {
       name: "Base tokens",
       status: "ok",
-      message: "north/tokens/base.css exists",
+      message: ".north/tokens/base.css exists",
     } satisfies Check;
     pushCheck(checks, check);
     logCheck(log, check);
@@ -455,7 +457,7 @@ export async function doctor(options: DoctorOptions = {}): Promise<DoctorResult>
       const check = {
         name: "Compatibility (Tailwind)",
         status: "warn",
-        message: "No Tailwind version declared in north.config.yaml.",
+        message: "No Tailwind version declared in .north/config.yaml.",
       } satisfies Check;
       pushCheck(checks, check);
       logCheck(log, check);
@@ -500,7 +502,7 @@ export async function doctor(options: DoctorOptions = {}): Promise<DoctorResult>
       const check = {
         name: "Compatibility (shadcn)",
         status: "warn",
-        message: "No shadcn version declared in north.config.yaml.",
+        message: "No shadcn version declared in .north/config.yaml.",
       } satisfies Check;
       pushCheck(checks, check);
       logCheck(log, check);
@@ -545,7 +547,7 @@ export async function doctor(options: DoctorOptions = {}): Promise<DoctorResult>
 
     try {
       const cssContent = await readFile(generatedPath, "utf-8");
-      const tokenDefinitions = parseCssTokens(cssContent, "north/tokens/generated.css");
+      const tokenDefinitions = parseCssTokens(cssContent, ".north/tokens/generated.css");
       const tokenMap = new Map(tokenDefinitions.map((def) => [def.name, def.value]));
 
       const expectedAliases = generateShadcnAliases();

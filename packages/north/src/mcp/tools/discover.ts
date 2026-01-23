@@ -4,7 +4,7 @@
  * Exposes token usage pattern discovery to LLMs via MCP.
  * Wraps the `north find` CLI functionality for programmatic access.
  *
- * This is a Tier 3 tool - requires index (.north/index.db) to be present.
+ * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
 
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -793,7 +793,7 @@ function createDiscoverHandler() {
 /**
  * Register the north_discover tool with the MCP server.
  *
- * This is a Tier 3 tool - requires index (.north/index.db) to be present.
+ * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
 export function registerDiscoverTool(server: McpServer): void {
   server.registerTool(

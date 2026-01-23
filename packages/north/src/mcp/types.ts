@@ -18,7 +18,7 @@ export type ServerState = "none" | "config" | "indexed";
 export interface NorthMcpContext {
   /** Current server state */
   state: ServerState;
-  /** Resolved path to north.config.yaml */
+  /** Resolved path to .north/config.yaml */
   configPath?: string;
   /** Resolved path to north.db index */
   indexPath?: string;

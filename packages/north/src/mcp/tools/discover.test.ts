@@ -150,9 +150,9 @@ describe("executeDiscoverTool", () => {
 
   test("returns error when index does not exist", async () => {
     // Create config but no index
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const result = await executeDiscoverTool(testDir, configPath, {
@@ -167,12 +167,12 @@ describe("executeDiscoverTool", () => {
 
   test("returns payload with mode and summary", async () => {
     // Create config and index
-    const northDir = resolve(testDir, "north");
-    const northHiddenDir = resolve(testDir, ".north");
+    const northDir = resolve(testDir, ".north");
+    const northHiddenDir = resolve(testDir, ".north", "state");
     await mkdir(northDir, { recursive: true });
     await mkdir(northHiddenDir, { recursive: true });
 
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     // Create a minimal index database
@@ -221,12 +221,12 @@ describe("executeDiscoverTool", () => {
   });
 
   test("returns results for tokens mode", async () => {
-    const northDir = resolve(testDir, "north");
-    const northHiddenDir = resolve(testDir, ".north");
+    const northDir = resolve(testDir, ".north");
+    const northHiddenDir = resolve(testDir, ".north", "state");
     await mkdir(northDir, { recursive: true });
     await mkdir(northHiddenDir, { recursive: true });
 
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const indexPath = resolve(northHiddenDir, "index.db");
@@ -275,12 +275,12 @@ describe("executeDiscoverTool", () => {
   });
 
   test("returns results for cascade mode with selector", async () => {
-    const northDir = resolve(testDir, "north");
-    const northHiddenDir = resolve(testDir, ".north");
+    const northDir = resolve(testDir, ".north");
+    const northHiddenDir = resolve(testDir, ".north", "state");
     await mkdir(northDir, { recursive: true });
     await mkdir(northHiddenDir, { recursive: true });
 
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const indexPath = resolve(northHiddenDir, "index.db");
@@ -326,12 +326,12 @@ describe("executeDiscoverTool", () => {
   });
 
   test("returns error for cascade mode without selector", async () => {
-    const northDir = resolve(testDir, "north");
-    const northHiddenDir = resolve(testDir, ".north");
+    const northDir = resolve(testDir, ".north");
+    const northHiddenDir = resolve(testDir, ".north", "state");
     await mkdir(northDir, { recursive: true });
     await mkdir(northHiddenDir, { recursive: true });
 
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const indexPath = resolve(northHiddenDir, "index.db");
@@ -369,12 +369,12 @@ describe("executeDiscoverTool", () => {
   });
 
   test("returns error for similar mode without selector", async () => {
-    const northDir = resolve(testDir, "north");
-    const northHiddenDir = resolve(testDir, ".north");
+    const northDir = resolve(testDir, ".north");
+    const northHiddenDir = resolve(testDir, ".north", "state");
     await mkdir(northDir, { recursive: true });
     await mkdir(northHiddenDir, { recursive: true });
 
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const indexPath = resolve(northHiddenDir, "index.db");
@@ -425,12 +425,12 @@ describe("DiscoverPayload structure", () => {
   });
 
   test("has all required fields on success", async () => {
-    const northDir = resolve(testDir, "north");
-    const northHiddenDir = resolve(testDir, ".north");
+    const northDir = resolve(testDir, ".north");
+    const northHiddenDir = resolve(testDir, ".north", "state");
     await mkdir(northDir, { recursive: true });
     await mkdir(northHiddenDir, { recursive: true });
 
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const indexPath = resolve(northHiddenDir, "index.db");
@@ -469,10 +469,10 @@ describe("DiscoverPayload structure", () => {
   });
 
   test("has error field on failure", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
 
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const payload: DiscoverPayload = await executeDiscoverTool(testDir, configPath, {

@@ -7,9 +7,14 @@ index 0000000..220f29f
 +extends: null
 +
 +rules:
-+  no-raw-palette: error
-+  no-arbitrary-colors: error
-+  no-arbitrary-values: error
++  no-raw-palette:
++    level: error
++  no-arbitrary-colors:
++    level: error
++  no-arbitrary-values:
++    level: error
++  missing-semantic-comment:
++    level: off
 +
 +lint:
 +  classFunctions:

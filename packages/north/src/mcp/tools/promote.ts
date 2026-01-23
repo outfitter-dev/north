@@ -4,7 +4,7 @@
  * Promotes magic values to design tokens.
  * Analyzes usage, suggests token name, and provides implementation guidance.
  *
- * This is a Tier 3 tool - requires index (.north/index.db) to be present.
+ * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
 
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -439,7 +439,7 @@ function generateRecommendation(
     action: "create",
     tokenName: suggestedName,
     rationale: `No similar tokens found. Create a new ${type} token.${usageNote}`,
-    implementation: `Add to your token definitions (north/tokens/base.css or semantic.css):\n${suggestedName}: ${value};`,
+    implementation: `Add to your token definitions (.north/tokens/base.css or semantic.css):\n${suggestedName}: ${value};`,
   };
 }
 
@@ -518,7 +518,7 @@ export async function executePromoteTool(
 /**
  * Register the north_promote tool with the MCP server.
  *
- * This is a Tier 3 tool - requires index (.north/index.db) to be present.
+ * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
 export function registerPromoteTool(server: McpServer): void {
   server.registerTool(

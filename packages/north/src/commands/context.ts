@@ -1,7 +1,7 @@
 import { access, readFile } from "node:fs/promises";
-import { resolve } from "node:path";
 import chalk from "chalk";
-import { findConfigFile, loadConfig } from "../config/loader.ts";
+import { resolveConfigPath, resolveNorthPaths } from "../config/env.ts";
+import { loadConfig } from "../config/loader.ts";
 import type { NorthConfig } from "../config/schema.ts";
 import {
   type PatternSummary,
@@ -122,7 +122,7 @@ export async function context(options: ContextOptions = {}): Promise<ContextResu
   const includeValues = options.includeValues ?? false;
 
   try {
-    const configPath = options.config ? resolve(cwd, options.config) : await findConfigFile(cwd);
+    const configPath = await resolveConfigPath(cwd, options.config);
 
     if (!configPath) {
       throw new ContextError("Config file not found. Run 'north init' first.");
@@ -137,8 +137,9 @@ export async function context(options: ContextOptions = {}): Promise<ContextResu
     const rules = summarizeRules(config);
     const guidance = buildGuidance(rules);
 
-    const generatedPath = resolve(cwd, "north/tokens/generated.css");
-    const basePath = resolve(cwd, "north/tokens/base.css");
+    const paths = resolveNorthPaths(configPath, cwd);
+    const generatedPath = paths.generatedTokensPath;
+    const basePath = paths.baseTokensPath;
 
     const [generatedExists, baseExists] = await Promise.all([
       fileExists(generatedPath),

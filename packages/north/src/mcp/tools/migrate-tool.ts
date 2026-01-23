@@ -4,7 +4,7 @@
  * Applies migration steps from a plan file, transforming code to use
  * design tokens and utilities.
  *
- * This is a Tier 2 tool - requires config (north.config.yaml) to be present.
+ * This is a Tier 2 tool - requires config (.north/config.yaml) to be present.
  *
  * @see .scratch/mcp-server/15-cli-migrate-spec.md for CLI specification
  */
@@ -23,8 +23,8 @@ export const MigrateInputSchema = z.object({
   plan: z
     .string()
     .optional()
-    .default(".north/migration-plan.json")
-    .describe("Path to migration plan file (default: .north/migration-plan.json)"),
+    .default(".north/state/migration-plan.json")
+    .describe("Path to migration plan file (default: .north/state/migration-plan.json)"),
   steps: z.array(z.string()).optional().describe("Only execute these specific step IDs"),
   skip: z.array(z.string()).optional().describe("Skip these specific step IDs"),
   file: z.string().optional().describe("Only process steps affecting this file"),
@@ -218,7 +218,7 @@ export async function executeMigrateTool(
 /**
  * Register the north_migrate tool with the MCP server.
  *
- * This is a Tier 2 tool - requires config (north.config.yaml) to be present.
+ * This is a Tier 2 tool - requires config (.north/config.yaml) to be present.
  */
 export function registerMigrateTool(server: McpServer): void {
   server.registerTool(

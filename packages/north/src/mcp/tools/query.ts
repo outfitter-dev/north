@@ -387,7 +387,7 @@ export async function executeQueryTool(
 /**
  * Register the north_query tool with the MCP server.
  *
- * This is a Tier 3 tool - requires index (.north/index.db) to be present.
+ * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
 export function registerQueryTool(server: McpServer): void {
   server.registerTool(

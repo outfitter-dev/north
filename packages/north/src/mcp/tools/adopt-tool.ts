@@ -4,7 +4,7 @@
  * Analyzes the indexed codebase to find repeated class patterns that could
  * be extracted into reusable design tokens or utilities.
  *
- * This is a Tier 3 tool - requires index (.north/index.db) to be present.
+ * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  *
  * @see .scratch/mcp-server/13-cli-adopt-spec.md for CLI specification
  */
@@ -204,7 +204,7 @@ export async function executeAdoptTool(
 /**
  * Register the north_adopt tool with the MCP server.
  *
- * This is a Tier 3 tool - requires index (.north/index.db) to be present.
+ * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
 export function registerAdoptTool(server: McpServer): void {
   server.registerTool(

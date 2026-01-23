@@ -5,7 +5,7 @@
  * context-aware linting rules. Files can be classified explicitly, automatically
  * based on path patterns, or via heuristics.
  *
- * This is a Tier 3 tool - requires index (.north/index.db) to be present.
+ * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  *
  * @see .scratch/mcp-server/12-cli-classify-spec.md for CLI specification
  * @issue #87 (partial)
@@ -187,7 +187,7 @@ export async function executeClassifyTool(
 /**
  * Register the north_classify tool with the MCP server.
  *
- * This is a Tier 3 tool - requires index (.north/index.db) to be present.
+ * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
 export function registerClassifyTool(server: McpServer): void {
   server.registerTool(

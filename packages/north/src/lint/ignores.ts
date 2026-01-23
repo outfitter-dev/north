@@ -12,7 +12,8 @@ export const DEFAULT_IGNORES = [
   "**/node_modules/**",
   "**/.git/**",
   "**/.next/**",
-  "**/.north/**",
+  "**/.north/state/**",
+  "**/.north/reports/**",
   "**/dist/**",
   "**/build/**",
   "**/coverage/**",
@@ -29,7 +30,7 @@ export function getIgnorePatterns(config: NorthConfig): string[] {
 
 /**
  * Ignore patterns for index source collection.
- * Indexing intentionally ignores lint-specific patterns so north/ sources are included.
+ * Indexing intentionally ignores lint-specific patterns so .north sources are included.
  */
 export function getIndexIgnorePatterns(): string[] {
   return [...DEFAULT_IGNORES];

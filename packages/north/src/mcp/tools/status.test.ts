@@ -67,13 +67,13 @@ describe("executeStatusTool", () => {
     mockDetectContext.mockResolvedValue({
       state: "config",
       cwd: "/test/project",
-      configPath: "/test/project/north.config.yaml",
+      configPath: "/test/project/.north/config.yaml",
     });
 
     const status = await executeStatusTool();
 
     expect(status.state).toBe("config");
-    expect(status.configPath).toBe("/test/project/north.config.yaml");
+    expect(status.configPath).toBe("/test/project/.north/config.yaml");
     expect(status.indexPath).toBeNull();
     expect(status.capabilities.check).toBe(true);
     expect(status.capabilities.find).toBe(false);
@@ -85,15 +85,15 @@ describe("executeStatusTool", () => {
     mockDetectContext.mockResolvedValue({
       state: "indexed",
       cwd: "/test/project",
-      configPath: "/test/project/north.config.yaml",
-      indexPath: "/test/project/.north/index.db",
+      configPath: "/test/project/.north/config.yaml",
+      indexPath: "/test/project/.north/state/index.db",
     });
 
     const status = await executeStatusTool();
 
     expect(status.state).toBe("indexed");
-    expect(status.configPath).toBe("/test/project/north.config.yaml");
-    expect(status.indexPath).toBe("/test/project/.north/index.db");
+    expect(status.configPath).toBe("/test/project/.north/config.yaml");
+    expect(status.indexPath).toBe("/test/project/.north/state/index.db");
     expect(status.capabilities.check).toBe(true);
     expect(status.capabilities.find).toBe(true);
     expect(status.capabilities.context).toBe(true);

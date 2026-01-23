@@ -24,11 +24,15 @@ export class InitError extends Error {
 // Directory Structure
 // ============================================================================
 
-const NORTH_DIR = "north";
-const TOKENS_DIR = "north/tokens";
-const RULES_DIR = "north/rules";
-const CONFIG_FILE = "north/north.config.yaml";
-const BASE_CSS_FILE = "north/tokens/base.css";
+const NORTH_DIR = ".north";
+const TOKENS_DIR = ".north/tokens";
+const RULES_DIR = ".north/rules";
+const PRESETS_DIR = ".north/presets";
+const STATE_DIR = ".north/state";
+const CONFIG_FILE = ".north/config.yaml";
+const BASE_CSS_FILE = ".north/tokens/base.css";
+const GITIGNORE_FILE = ".north/.gitignore";
+const README_FILE = ".north/README.md";
 
 /**
  * Check if file or directory exists
@@ -64,6 +68,28 @@ function createBaseCSSTemplate(): string {
 `;
 }
 
+function createGitignoreTemplate(): string {
+  return `# North generated state (safe to delete)
+state/
+
+# Optional: default-ignore reports unless explicitly committed
+# reports/
+`;
+}
+
+function createReadmeTemplate(): string {
+  return `# North Project Files
+
+This directory stores North configuration and design system assets.
+
+- config.yaml: primary configuration (committed)
+- presets/: in-repo presets (committed)
+- tokens/: generated + custom tokens (committed)
+- rules/: lint rules (committed)
+- state/: generated state (ignored)
+`;
+}
+
 // ============================================================================
 // Init Command
 // ============================================================================
@@ -87,8 +113,12 @@ export async function init(options: InitOptions = {}): Promise<InitResult> {
   const northDir = resolve(cwd, NORTH_DIR);
   const tokensDir = resolve(cwd, TOKENS_DIR);
   const rulesDir = resolve(cwd, RULES_DIR);
+  const presetsDir = resolve(cwd, PRESETS_DIR);
+  const stateDir = resolve(cwd, STATE_DIR);
   const configFile = resolve(cwd, CONFIG_FILE);
   const baseCSSFile = resolve(cwd, BASE_CSS_FILE);
+  const gitignoreFile = resolve(cwd, GITIGNORE_FILE);
+  const readmeFile = resolve(cwd, README_FILE);
 
   try {
     // Check if already initialized
@@ -114,14 +144,26 @@ export async function init(options: InitOptions = {}): Promise<InitResult> {
     await mkdir(northDir, { recursive: true });
     await mkdir(tokensDir, { recursive: true });
     await mkdir(rulesDir, { recursive: true });
-    console.log(`${chalk.green("✓")} Created north/ directory`);
-    console.log(`${chalk.green("✓")} Created north/tokens/ directory`);
-    console.log(`${chalk.green("✓")} Created north/rules/ directory`);
+    await mkdir(presetsDir, { recursive: true });
+    await mkdir(stateDir, { recursive: true });
+    console.log(`${chalk.green("✓")} Created .north/ directory`);
+    console.log(`${chalk.green("✓")} Created ${TOKENS_DIR} directory`);
+    console.log(`${chalk.green("✓")} Created ${RULES_DIR} directory`);
+    console.log(`${chalk.green("✓")} Created ${PRESETS_DIR} directory`);
+    console.log(`${chalk.green("✓")} Created ${STATE_DIR} directory`);
 
     // Write config file
     console.log(chalk.dim("\nWriting configuration..."));
     await writeFileAtomic(configFile, DEFAULT_CONFIG_YAML);
     console.log(`${chalk.green("✓")} Created ${CONFIG_FILE}`);
+
+    // Write .north/.gitignore
+    await writeFileAtomic(gitignoreFile, createGitignoreTemplate());
+    console.log(`${chalk.green("✓")} Created ${GITIGNORE_FILE}`);
+
+    // Write .north/README.md
+    await writeFileAtomic(readmeFile, createReadmeTemplate());
+    console.log(`${chalk.green("✓")} Created ${README_FILE}`);
 
     // Write base.css (only if it doesn't exist or force mode)
     const baseCSSExists = await exists(baseCSSFile);
@@ -167,11 +209,9 @@ export async function init(options: InitOptions = {}): Promise<InitResult> {
 
     console.log("Next steps:");
     console.log(
-      `${chalk.cyan("  1.")} Import tokens in your CSS: ${chalk.dim("@import './north/tokens/generated.css';")}`
+      `${chalk.cyan("  1.")} Import tokens in your CSS: ${chalk.dim("@import './.north/tokens/generated.css';")}`
     );
-    console.log(
-      `${chalk.cyan("  2.")} Customize your config: ${chalk.dim("north/north.config.yaml")}`
-    );
+    console.log(`${chalk.cyan("  2.")} Customize your config: ${chalk.dim(".north/config.yaml")}`);
     console.log(`${chalk.cyan("  3.")} Regenerate tokens: ${chalk.dim("north gen")}`);
     console.log(`${chalk.cyan("  4.")} Validate setup: ${chalk.dim("north doctor")}`);
 

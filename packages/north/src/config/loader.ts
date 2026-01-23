@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { parse as parseYAML } from "yaml";
 import { applyDefaults } from "./defaults.ts";
+import { findConfigFile } from "./env.ts";
 import { type NorthConfig, validateConfig } from "./schema.ts";
 
 // ============================================================================
@@ -313,23 +314,4 @@ export async function loadConfig(filePath: string): Promise<LoadConfigResult> {
 /**
  * Find config file in current or parent directories
  */
-export async function findConfigFile(
-  startDir: string,
-  configFileName = "north.config.yaml"
-): Promise<string | null> {
-  let currentDir = resolve(startDir);
-  const root = resolve("/");
-
-  while (currentDir !== root) {
-    const configPath = resolve(currentDir, "north", configFileName);
-    try {
-      await readFile(configPath, "utf-8");
-      return configPath;
-    } catch {
-      // Not found, try parent
-      currentDir = dirname(currentDir);
-    }
-  }
-
-  return null;
-}
+export { findConfigFile };

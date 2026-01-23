@@ -6,7 +6,7 @@
 
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { findConfigFile } from "../config/loader.ts";
+import { resolveConfigPath } from "../config/env.ts";
 import { writeFileAtomic } from "../generation/file-writer.ts";
 import { runLint } from "../lint/engine.ts";
 import type { LintIssue, RuleSeverity } from "../lint/types.ts";
@@ -759,10 +759,10 @@ function formatOutput(plan: MigrationPlan, planPath: string, source: string): st
 export async function propose(options: ProposeOptions = {}): Promise<ProposeReport> {
   const cwd = options.cwd ?? process.cwd();
   const strategy = options.strategy ?? "balanced";
-  const outputPath = options.output ?? ".north/migration-plan.json";
+  const outputPath = options.output ?? ".north/state/migration-plan.json";
 
   // Verify config exists
-  const configPath = options.config ? resolve(cwd, options.config) : await findConfigFile(cwd);
+  const configPath = await resolveConfigPath(cwd, options.config);
   if (!configPath) {
     throw new ProposeError("Run 'north init' first");
   }

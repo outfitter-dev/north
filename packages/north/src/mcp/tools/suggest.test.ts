@@ -16,10 +16,10 @@ describe("executeSuggestTool", () => {
   });
 
   async function setupTestConfig(config: string): Promise<string> {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     const rulesDir = resolve(northDir, "rules");
     await mkdir(rulesDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, config);
 
     // Create a placeholder rule
@@ -318,10 +318,10 @@ describe("SuggestResponse structure", () => {
   });
 
   test("has all required fields", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     const rulesDir = resolve(northDir, "rules");
     await mkdir(rulesDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     await writeFile(
@@ -377,10 +377,10 @@ describe("TokenSuggestion structure", () => {
   });
 
   test("suggestion has all required fields", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     const rulesDir = resolve(northDir, "rules");
     await mkdir(rulesDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     await writeFile(

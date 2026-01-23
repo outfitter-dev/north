@@ -4,13 +4,13 @@
  * Exposes design system context to LLMs via MCP.
  * Returns token catalog, semantic mappings, and component guidance.
  *
- * This is a Tier 2 tool - requires config (north.config.yaml) to be present.
+ * This is a Tier 2 tool - requires config (.north/config.yaml) to be present.
  */
 
 import { access } from "node:fs/promises";
-import { resolve } from "node:path";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { resolveNorthPaths } from "../../config/env.ts";
 import { loadConfig } from "../../config/loader.ts";
 import type { NorthConfig } from "../../config/schema.ts";
 import { checkIndexFresh, getIndexStatus, getTopPatterns } from "../../index/queries.ts";
@@ -163,8 +163,9 @@ export async function executeContextTool(
   const rules = summarizeRules(config);
   const guidance = buildGuidance(rules);
 
-  const generatedPath = resolve(workingDir, "north/tokens/generated.css");
-  const basePath = resolve(workingDir, "north/tokens/base.css");
+  const paths = resolveNorthPaths(configPath, workingDir);
+  const generatedPath = paths.generatedTokensPath;
+  const basePath = paths.baseTokensPath;
 
   const [generatedExists, baseExists] = await Promise.all([
     fileExists(generatedPath),
@@ -216,7 +217,7 @@ export async function executeContextTool(
 /**
  * Register the north_context tool with the MCP server.
  *
- * This is a Tier 2 tool - requires config (north.config.yaml) to be present.
+ * This is a Tier 2 tool - requires config (.north/config.yaml) to be present.
  */
 export function registerContextTool(server: McpServer): void {
   server.registerTool(

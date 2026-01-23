@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rm } from "node:fs/promises";
-import { dirname, relative, resolve } from "node:path";
-import { findConfigFile, loadConfig } from "../config/loader.ts";
+import { dirname, relative } from "node:path";
+import { resolveConfigPath, resolveNorthPaths } from "../config/env.ts";
+import { loadConfig } from "../config/loader.ts";
 import { resolveClassToTokenValidated } from "../lib/utility-classification.ts";
 import { extractClassTokens } from "../lint/extract.ts";
 import type { ClassSite } from "../lint/types.ts";
@@ -131,16 +132,7 @@ function buildPatterns(sites: ClassSite[]) {
 }
 
 async function loadProjectConfig(cwd: string, configOverride?: string) {
-  if (configOverride) {
-    const configPath = resolve(cwd, configOverride);
-    const result = await loadConfig(configPath);
-    if (!result.success) {
-      throw new Error(result.error.message);
-    }
-    return { config: result.config, configPath };
-  }
-
-  const configPath = await findConfigFile(cwd);
+  const configPath = await resolveConfigPath(cwd, configOverride);
   if (!configPath) {
     throw new Error("Config file not found. Run 'north init' to initialize.");
   }
@@ -150,7 +142,9 @@ async function loadProjectConfig(cwd: string, configOverride?: string) {
     throw new Error(result.error.message);
   }
 
-  return { config: result.config, configPath };
+  const paths = resolveNorthPaths(configPath, cwd);
+
+  return { config: result.config, configPath, paths };
 }
 
 export interface BuildIndexOptions {
@@ -160,11 +154,11 @@ export interface BuildIndexOptions {
 
 export async function buildIndex(options: BuildIndexOptions = {}): Promise<IndexBuildResult> {
   const cwd = options.cwd ?? process.cwd();
-  const { config, configPath } = await loadProjectConfig(cwd, options.configPath);
-  const { tsxFiles, cssFiles, allFiles } = await collectSourceFiles(cwd, configPath);
+  const { config, configPath, paths } = await loadProjectConfig(cwd, options.configPath);
+  const { tsxFiles, cssFiles, allFiles } = await collectSourceFiles(paths.projectRoot, configPath);
 
-  const sourceHash = await computeSourceHash(allFiles, cwd);
-  const indexPath = resolveIndexPath(cwd, config);
+  const sourceHash = await computeSourceHash(allFiles, paths.projectRoot);
+  const indexPath = resolveIndexPath(paths, config);
 
   await mkdir(dirname(indexPath), { recursive: true });
   await Promise.all([
@@ -181,7 +175,7 @@ export async function buildIndex(options: BuildIndexOptions = {}): Promise<Index
 
   for (const cssFile of cssFiles) {
     const content = await readFile(cssFile, "utf-8");
-    const relativePath = normalizePath(relative(cwd, cssFile));
+    const relativePath = normalizePath(relative(paths.projectRoot, cssFile));
     const { tokens: definitions, themeVariants } = parseCssTokensWithThemes(content, relativePath);
 
     for (const definition of definitions) {
@@ -222,7 +216,7 @@ export async function buildIndex(options: BuildIndexOptions = {}): Promise<Index
 
   for (const tsxFile of tsxFiles) {
     const content = await readFile(tsxFile, "utf-8");
-    const relativePath = normalizePath(relative(cwd, tsxFile));
+    const relativePath = normalizePath(relative(paths.projectRoot, tsxFile));
     const extraction = extractClassTokens(content, relativePath, {
       classFunctions: config.lint?.classFunctions,
     });

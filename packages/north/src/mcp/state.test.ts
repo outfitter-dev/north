@@ -23,29 +23,23 @@ describe("detectProjectState", () => {
   });
 
   test("returns 'config' when config exists but no index", async () => {
-    // Create north/north.config.yaml
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    await writeFile(
-      resolve(northDir, "north.config.yaml"),
-      "compatibility:\n  tailwind: 4\n  shadcn: 2"
-    );
+    await writeFile(resolve(northDir, "config.yaml"), "compatibility:\n  tailwind: 4\n  shadcn: 2");
 
     const state = await detectProjectState(testDir);
     expect(state).toBe("config");
   });
 
   test("returns 'indexed' when both config and index exist", async () => {
-    // Create north/north.config.yaml
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    await writeFile(
-      resolve(northDir, "north.config.yaml"),
-      "compatibility:\n  tailwind: 4\n  shadcn: 2"
-    );
+    await writeFile(resolve(northDir, "config.yaml"), "compatibility:\n  tailwind: 4\n  shadcn: 2");
 
-    // Create .north/index.db
-    const indexDir = resolve(testDir, ".north");
+    // Create .north/state/index.db
+    const indexDir = resolve(testDir, ".north", "state");
     await mkdir(indexDir, { recursive: true });
     await writeFile(resolve(indexDir, "index.db"), "fake-db-content");
 
@@ -76,9 +70,9 @@ describe("detectContext", () => {
   });
 
   test("returns state 'config' with configPath when config exists", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: 4");
 
     const ctx = await detectContext(testDir);
@@ -91,13 +85,13 @@ describe("detectContext", () => {
 
   test("returns state 'indexed' with both paths when both exist", async () => {
     // Create config
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: 4");
 
     // Create index
-    const indexDir = resolve(testDir, ".north");
+    const indexDir = resolve(testDir, ".north", "state");
     await mkdir(indexDir, { recursive: true });
     const indexPath = resolve(indexDir, "index.db");
     await writeFile(indexPath, "fake-db-content");
@@ -114,11 +108,11 @@ describe("detectContext", () => {
 describe("path helpers", () => {
   test("getConfigPath returns expected path", () => {
     const path = getConfigPath("/project");
-    expect(path).toBe("/project/north/north.config.yaml");
+    expect(path).toBe("/project/.north/config.yaml");
   });
 
   test("getIndexPath returns expected path", () => {
     const path = getIndexPath("/project");
-    expect(path).toBe("/project/.north/index.db");
+    expect(path).toBe("/project/.north/state/index.db");
   });
 });

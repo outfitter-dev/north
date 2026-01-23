@@ -213,7 +213,7 @@ describe("ProposeOptions structure", () => {
       cwd: "/path/to/project",
       config: "custom.config.yaml",
       from: "check",
-      output: ".north/migration-plan.json",
+      output: ".north/state/migration-plan.json",
       strategy: "balanced",
       include: ["no-raw-palette"],
       exclude: ["component-complexity"],
@@ -650,7 +650,7 @@ describe("Output formats", () => {
   test("JSON output includes kind and plan", () => {
     const output = {
       kind: "propose" as const,
-      planPath: ".north/migration-plan.json",
+      planPath: ".north/state/migration-plan.json",
       plan: {
         version: 1 as const,
         createdAt: new Date().toISOString(),
@@ -672,9 +672,9 @@ describe("Output formats", () => {
     expect(output.plan.version).toBe(1);
   });
 
-  test("plan file defaults to .north/migration-plan.json", () => {
-    const defaultOutput = ".north/migration-plan.json";
-    expect(defaultOutput).toBe(".north/migration-plan.json");
+  test("plan file defaults to .north/state/migration-plan.json", () => {
+    const defaultOutput = ".north/state/migration-plan.json";
+    expect(defaultOutput).toBe(".north/state/migration-plan.json");
   });
 });
 

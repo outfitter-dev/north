@@ -44,7 +44,7 @@ bun add -D @outfitter/north
 ## Common commands
 
 ```bash
-north init                    # Set up north/ and default config
+north init                    # Set up .north/ and default config
 north gen                     # Regenerate tokens
 north index                   # Build the index
 north check                   # Lint design system usage

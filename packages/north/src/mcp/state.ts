@@ -7,7 +7,9 @@
 
 import { stat } from "node:fs/promises";
 import { resolve } from "node:path";
-import { findConfigFile } from "../config/loader.ts";
+import { DEFAULT_STATE_DIR, resolveConfigPath, resolveNorthPaths } from "../config/env.ts";
+import { loadConfig } from "../config/loader.ts";
+import { resolveIndexPath } from "../index/sources.ts";
 import type { NorthMcpContext, ServerState } from "./types.ts";
 
 /**
@@ -26,15 +28,19 @@ async function fileExists(path: string): Promise<boolean> {
  * Detect the current server state by checking for config and index files.
  *
  * States:
- * - 'none': No north.config.yaml found
+ * - 'none': No .north/config.yaml found
  * - 'config': Config exists, but no index.db
  * - 'indexed': Both config and index exist
  */
 export async function detectProjectState(cwd: string): Promise<ServerState> {
-  const configPath = await findConfigFile(cwd);
+  const configPath = await resolveConfigPath(cwd);
   if (!configPath) return "none";
 
-  const indexPath = resolve(cwd, ".north/index.db");
+  const paths = resolveNorthPaths(configPath, cwd);
+  const loadResult = await loadConfig(configPath);
+  const indexPath = loadResult.success
+    ? resolveIndexPath(paths, loadResult.config)
+    : resolve(paths.stateDir, "index.db");
   const indexExists = await fileExists(indexPath);
 
   if (indexExists) return "indexed";
@@ -45,13 +51,17 @@ export async function detectProjectState(cwd: string): Promise<ServerState> {
  * Detect full context including paths to config and index files.
  */
 export async function detectContext(cwd: string): Promise<NorthMcpContext> {
-  const configPath = await findConfigFile(cwd);
+  const configPath = await resolveConfigPath(cwd);
 
   if (!configPath) {
     return { state: "none", cwd };
   }
 
-  const indexPath = resolve(cwd, ".north/index.db");
+  const paths = resolveNorthPaths(configPath, cwd);
+  const loadResult = await loadConfig(configPath);
+  const indexPath = loadResult.success
+    ? resolveIndexPath(paths, loadResult.config)
+    : resolve(paths.stateDir, "index.db");
   const indexExists = await fileExists(indexPath);
 
   if (indexExists) {
@@ -65,12 +75,12 @@ export async function detectContext(cwd: string): Promise<NorthMcpContext> {
  * Get the expected config file path for a project directory.
  */
 export function getConfigPath(cwd: string): string {
-  return resolve(cwd, "north/north.config.yaml");
+  return resolve(cwd, ".north/config.yaml");
 }
 
 /**
  * Get the expected index file path for a project directory.
  */
 export function getIndexPath(cwd: string): string {
-  return resolve(cwd, ".north/index.db");
+  return resolve(cwd, ".north", DEFAULT_STATE_DIR, "index.db");
 }

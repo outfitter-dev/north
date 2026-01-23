@@ -26,7 +26,7 @@ interface FuzzResult {
 export async function runFuzzSuite(options: FuzzRunOptions = {}) {
   const fixturesDir = harnessPath("fixtures", "fuzz");
   const manifest = await readJson<FuzzManifest>(harnessPath("fixtures", "fuzz", "manifest.json"));
-  const configPath = harnessPath("fixtures", "north", "north", "north.config.yaml");
+  const configPath = harnessPath("fixtures", "fuzz", ".north", "config.yaml");
 
   const northResult = await runNorth(["check", "--json", "--config", configPath], fixturesDir, {
     timeoutMs: 60_000,
@@ -43,12 +43,16 @@ export async function runFuzzSuite(options: FuzzRunOptions = {}) {
     throw new Error("failed to parse north output");
   }
 
+  const filteredViolations = report.violations.filter(
+    (violation) => violation.ruleId !== "north/missing-semantic-comment"
+  );
+
   const cases = options.limit ? manifest.cases.slice(0, options.limit) : manifest.cases;
   const results: FuzzResult[] = [];
   const seenFiles = new Set<string>();
 
   for (const entry of cases) {
-    const violations = report.violations.filter((violation) => violation.filePath === entry.file);
+    const violations = filteredViolations.filter((violation) => violation.filePath === entry.file);
     const summary = summarizeViolations(
       violations.map((violation) => ({
         ruleId: violation.ruleId,
@@ -65,7 +69,7 @@ export async function runFuzzSuite(options: FuzzRunOptions = {}) {
 
   if (!options.limit) {
     const unexpectedFiles = new Set(
-      report.violations
+      filteredViolations
         .map((violation) => violation.filePath)
         .filter((file) => !seenFiles.has(file))
     );

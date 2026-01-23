@@ -43,6 +43,16 @@ export {
   ConfigExtendsError,
 } from "./config/loader.ts";
 
+export {
+  resolveConfigPath,
+  resolveNorthPaths,
+  type NorthPaths,
+  DEFAULT_CONFIG_PATHS,
+  DEFAULT_CONFIG_FILE,
+  DEFAULT_NORTH_DIR,
+  LEGACY_NORTH_DIR,
+} from "./config/env.ts";
+
 // Generation exports
 export {
   generateTokensFromConfig,

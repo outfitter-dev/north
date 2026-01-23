@@ -133,10 +133,10 @@ describe("executePromoteTool", () => {
   });
 
   test("returns promote response for color value", async () => {
-    // Create north/north.config.yaml
-    const northDir = resolve(testDir, "north");
+    // Create .north/config.yaml
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(
       configPath,
       `
@@ -158,9 +158,9 @@ compatibility:
   });
 
   test("returns promote response for spacing value", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const response = await executePromoteTool(testDir, configPath, {
@@ -174,9 +174,9 @@ compatibility:
   });
 
   test("uses provided type hint over detection", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const response = await executePromoteTool(testDir, configPath, {
@@ -189,9 +189,9 @@ compatibility:
   });
 
   test("uses provided suggested name over generation", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const response = await executePromoteTool(testDir, configPath, {
@@ -203,9 +203,9 @@ compatibility:
   });
 
   test("includes empty existingUsage when analyze is false", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const response = await executePromoteTool(testDir, configPath, {
@@ -217,9 +217,9 @@ compatibility:
   });
 
   test("includes empty similarTokens when no index exists", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const response = await executePromoteTool(testDir, configPath, {
@@ -248,9 +248,9 @@ describe("PromoteResponse structure", () => {
   });
 
   test("has all required fields", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const response: PromoteResponse = await executePromoteTool(testDir, configPath, {
@@ -277,9 +277,9 @@ describe("PromoteResponse structure", () => {
   });
 
   test("recommendation action is valid enum value", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const response = await executePromoteTool(testDir, configPath, {
@@ -290,9 +290,9 @@ describe("PromoteResponse structure", () => {
   });
 
   test("recommendation includes implementation guidance", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const response = await executePromoteTool(testDir, configPath, {
@@ -321,9 +321,9 @@ describe("PromoteInputSchema validation", () => {
   });
 
   test("accepts valid color value", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     // Should not throw
@@ -335,9 +335,9 @@ describe("PromoteInputSchema validation", () => {
   });
 
   test("accepts valid spacing value", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const response = await executePromoteTool(testDir, configPath, {
@@ -348,9 +348,9 @@ describe("PromoteInputSchema validation", () => {
   });
 
   test("accepts all valid token types", async () => {
-    const northDir = resolve(testDir, "north");
+    const northDir = resolve(testDir, ".north");
     await mkdir(northDir, { recursive: true });
-    const configPath = resolve(northDir, "north.config.yaml");
+    const configPath = resolve(northDir, "config.yaml");
     await writeFile(configPath, "compatibility:\n  tailwind: '4'");
 
     const types = ["color", "spacing", "radius", "font", "shadow"] as const;
