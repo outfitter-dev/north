@@ -9,7 +9,7 @@
  * @see .scratch/mcp-server/14-cli-propose-spec.md for CLI specification
  */
 
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { type ProposeReport, propose } from "../../commands/propose.ts";
 import { detectContext } from "../state.ts";
@@ -212,8 +212,8 @@ export async function executeProposeTool(
  *
  * This is a Tier 2 tool - requires config (.north/config.yaml) to be present.
  */
-export function registerProposeTool(server: McpServer): void {
-  server.registerTool(
+export function registerProposeTool(server: McpServer): RegisteredTool {
+  return server.registerTool(
     "north_propose",
     {
       description:

@@ -6,8 +6,10 @@
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { version } from "../version.ts";
+import { detectProjectState } from "./state.ts";
 import { registerAdoptTool } from "./tools/adopt-tool.ts";
 import { registerCheckTool } from "./tools/check.ts";
 import { registerClassifyTool } from "./tools/classify-tool.ts";
@@ -204,6 +206,27 @@ export function getToolsForState(state: ServerState): TieredTool[] {
   }
 }
 
+type ToolRegistry = Map<string, RegisteredTool>;
+
+interface ToolRefreshOptions {
+  forceNotify?: boolean;
+}
+
+function applyToolState(registry: ToolRegistry, state: ServerState): boolean {
+  const allowed = new Set(getToolsForState(state).map((tool) => tool.name));
+  let changed = false;
+
+  for (const [name, tool] of registry) {
+    const shouldEnable = allowed.has(name);
+    if (tool.enabled !== shouldEnable) {
+      tool.update({ enabled: shouldEnable });
+      changed = true;
+    }
+  }
+
+  return changed;
+}
+
 // ============================================================================
 // Tool Registration
 // ============================================================================
@@ -212,26 +235,34 @@ export function getToolsForState(state: ServerState): TieredTool[] {
  * Register all North tools with the MCP server.
  * Tools are registered once; context is detected per-call.
  */
-function registerTools(server: McpServer): void {
+function registerTools(server: McpServer, onRefresh: () => void): ToolRegistry {
+  const registry: ToolRegistry = new Map();
+  const track = (name: string, tool: RegisteredTool) => {
+    registry.set(name, tool);
+    return tool;
+  };
+
   // Tier 1: Always available
-  registerStatusTool(server);
-  registerStatusAlias(server); // north_doctor alias
+  track("north_status", registerStatusTool(server, { onRefresh }));
+  track("north_doctor", registerStatusAlias(server, { onRefresh })); // north_doctor alias
 
   // Tier 2: Config-dependent tools
-  registerContextTool(server);
-  registerCheckTool(server);
-  registerSuggestTool(server);
-  registerProposeTool(server);
-  registerMigrateTool(server);
+  track("north_context", registerContextTool(server));
+  track("north_check", registerCheckTool(server));
+  track("north_suggest", registerSuggestTool(server));
+  track("north_propose", registerProposeTool(server));
+  track("north_migrate", registerMigrateTool(server));
 
   // Tier 3: Index-dependent tools
-  registerDiscoverTool(server);
-  registerDiscoverAlias(server); // north_find alias
-  registerPromoteTool(server);
-  registerQueryTool(server);
-  registerRefactorTool(server);
-  registerClassifyTool(server);
-  registerAdoptTool(server);
+  track("north_discover", registerDiscoverTool(server));
+  track("north_find", registerDiscoverAlias(server)); // north_find alias
+  track("north_promote", registerPromoteTool(server));
+  track("north_query", registerQueryTool(server));
+  track("north_refactor", registerRefactorTool(server));
+  track("north_classify", registerClassifyTool(server));
+  track("north_adopt", registerAdoptTool(server));
+
+  return registry;
 }
 
 // ============================================================================
@@ -241,7 +272,10 @@ function registerTools(server: McpServer): void {
 /**
  * Create and configure the North MCP server.
  */
-export function createServer(): McpServer {
+export function createServerWithTools(): {
+  server: McpServer;
+  refreshTools: (options?: ToolRefreshOptions) => Promise<ServerState>;
+} {
   const server = new McpServer(
     {
       name: SERVER_NAME,
@@ -255,9 +289,37 @@ export function createServer(): McpServer {
     }
   );
 
-  registerTools(server);
+  let currentState: ServerState = "none";
+  const registry = registerTools(server, () => {
+    void refreshTools({ forceNotify: true });
+  });
+  applyToolState(registry, currentState);
 
-  return server;
+  async function refreshTools(options: ToolRefreshOptions = {}): Promise<ServerState> {
+    const nextState = await detectProjectState(process.cwd());
+    const stateChanged = nextState !== currentState;
+
+    if (stateChanged) {
+      currentState = nextState;
+      const toolsChanged = applyToolState(registry, nextState);
+      if (!toolsChanged && options.forceNotify) {
+        server.sendToolListChanged();
+      }
+      return currentState;
+    }
+
+    if (options.forceNotify) {
+      server.sendToolListChanged();
+    }
+
+    return currentState;
+  }
+
+  return { server, refreshTools };
+}
+
+export function createServer(): McpServer {
+  return createServerWithTools().server;
 }
 
 /**
@@ -265,10 +327,11 @@ export function createServer(): McpServer {
  * This is the main entry point for the north-mcp binary.
  */
 export async function startServer(): Promise<void> {
-  const server = createServer();
+  const { server, refreshTools } = createServerWithTools();
   const transport = new StdioServerTransport();
 
   await server.connect(transport);
+  await refreshTools({ forceNotify: true });
 
   // Handle graceful shutdown
   process.on("SIGINT", async () => {

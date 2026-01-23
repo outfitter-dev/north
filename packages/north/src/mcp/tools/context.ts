@@ -8,7 +8,7 @@
  */
 
 import { access } from "node:fs/promises";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { resolveNorthPaths } from "../../config/env.ts";
 import { loadConfig } from "../../config/loader.ts";
@@ -223,8 +223,8 @@ export async function executeContextTool(
  *
  * This is a Tier 2 tool - requires config (.north/config.yaml) to be present.
  */
-export function registerContextTool(server: McpServer): void {
-  server.registerTool(
+export function registerContextTool(server: McpServer): RegisteredTool {
+  return server.registerTool(
     "north_context",
     {
       description:

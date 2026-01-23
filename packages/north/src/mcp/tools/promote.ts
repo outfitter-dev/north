@@ -7,7 +7,7 @@
  * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
 
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { type IndexDatabase, openIndexDatabase } from "../../index/db.ts";
 import { checkIndexFresh, getIndexStatus } from "../../index/queries.ts";
@@ -520,8 +520,8 @@ export async function executePromoteTool(
  *
  * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
-export function registerPromoteTool(server: McpServer): void {
-  server.registerTool(
+export function registerPromoteTool(server: McpServer): RegisteredTool {
+  return server.registerTool(
     "north_promote",
     {
       description:

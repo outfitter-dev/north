@@ -11,7 +11,7 @@
  * @issue #87 (partial)
  */
 
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { type ClassifyReport, classify } from "../../commands/classify.ts";
 import { type IndexDatabase, openIndexDatabase } from "../../index/db.ts";
@@ -189,8 +189,8 @@ export async function executeClassifyTool(
  *
  * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
-export function registerClassifyTool(server: McpServer): void {
-  server.registerTool(
+export function registerClassifyTool(server: McpServer): RegisteredTool {
+  return server.registerTool(
     "north_classify",
     {
       description:

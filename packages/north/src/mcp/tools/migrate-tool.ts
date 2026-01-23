@@ -9,7 +9,7 @@
  * @see .scratch/mcp-server/15-cli-migrate-spec.md for CLI specification
  */
 
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { type MigrateReport, migrate } from "../../commands/migrate.ts";
 import { resolveSafeMode } from "../../core/safe-mode.ts";
@@ -220,8 +220,8 @@ export async function executeMigrateTool(
  *
  * This is a Tier 2 tool - requires config (.north/config.yaml) to be present.
  */
-export function registerMigrateTool(server: McpServer): void {
-  server.registerTool(
+export function registerMigrateTool(server: McpServer): RegisteredTool {
+  return server.registerTool(
     "north_migrate",
     {
       description:
