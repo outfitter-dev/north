@@ -22,7 +22,7 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "check": "biome check --write .",
-    "test": "echo \"No tests yet\""
+    "test": "bun test"
   },
   "dependencies": {
     "@ast-grep/napi": "^0.40.5",
