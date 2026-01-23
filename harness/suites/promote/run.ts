@@ -77,7 +77,7 @@ export async function runPromoteSuite(options: PromoteRunOptions = {}) {
     await ensureNorthConfig(workDir);
     await ensureBaseCss(workDir);
 
-    const configPath = resolve(workDir, "north", "north.config.yaml");
+    const configPath = resolve(workDir, ".north", "config.yaml");
     const targetFile = await injectPatternFixture(workDir, scenario);
 
     const errors: string[] = [];
@@ -112,7 +112,7 @@ export async function runPromoteSuite(options: PromoteRunOptions = {}) {
       errors.push(`pattern count ${beforeCount} below ${scenario.instances}`);
     }
 
-    const baseCssPath = resolve(workDir, "north", "tokens", "base.css");
+    const baseCssPath = resolve(workDir, ".north", "tokens", "base.css");
     const baseBefore = await readText(baseCssPath);
 
     const promoteDry = await runNorth(
@@ -249,12 +249,12 @@ export async function runPromoteSuite(options: PromoteRunOptions = {}) {
 }
 
 async function ensureNorthConfig(workDir: string) {
-  const configPath = resolve(workDir, "north", "north.config.yaml");
-  const rulesDir = resolve(workDir, "north", "rules");
-  const fixtureDir = harnessPath("fixtures", "north", "north");
+  const configPath = resolve(workDir, ".north", "config.yaml");
+  const rulesDir = resolve(workDir, ".north", "rules");
+  const fixtureDir = harnessPath("fixtures", "north", ".north");
 
   if (!(await pathExists(configPath))) {
-    await copyDir(fixtureDir, resolve(workDir, "north"));
+    await copyDir(fixtureDir, resolve(workDir, ".north"));
     return;
   }
 
@@ -264,7 +264,7 @@ async function ensureNorthConfig(workDir: string) {
 }
 
 async function ensureBaseCss(workDir: string) {
-  const tokensDir = resolve(workDir, "north", "tokens");
+  const tokensDir = resolve(workDir, ".north", "tokens");
   const basePath = resolve(tokensDir, "base.css");
 
   if (await pathExists(basePath)) {

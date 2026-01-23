@@ -89,7 +89,7 @@ This is enough for:
 
 ## Exit Criteria
 
-- `.north/index.db` created successfully
+- `.north/state/index.db` created successfully
 - Queries work and return correct results
 - `north check` uses index for context classification
 - `north index --status` shows accurate statistics
@@ -145,7 +145,7 @@ Recursive CTEs for closure table traversal are tricky. Keep these in a dedicated
 ## Notes
 
 - Index is a cache, config is truth
-- Don't commit `.north/index.db` to git (add to `.gitignore`)
+- Don't commit `.north/state/index.db` to git (add to `.north/.gitignore`)
 - Test with `examples/nextjs-shadcn` to ensure realistic performance
 - Recursive CTEs need careful testing - they're powerful but tricky
 - Component graph and similarity cache deferred to v0.2 for faster shipping

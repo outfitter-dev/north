@@ -64,7 +64,7 @@ This directory contains the complete specification for North, split into logical
     - File organization
 
 14. [Configuration](./14-configuration.md)
-    - north.config.yaml structure
+    - .north/config.yaml structure
     - Configuration options
 
 15. [Drift Detection & Prevention](./15-drift-detection.md)

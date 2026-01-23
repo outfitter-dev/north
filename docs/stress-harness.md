@@ -15,11 +15,12 @@ bun run harness mutations --suite palette-drift
 harness/
   run.ts
   fixtures/
-    north/              # Shared North config + rules used by harness suites
+    north/              # Shared North fixtures used by harness suites
+      .north/           # Config + rules used by harness suites
   suites/
     mutations/
       config.json       # Golden repo + base patch config
-      base.patch         # Adds north/ config + rules to the golden repo
+      base.patch         # Adds .north/ config + rules to the golden repo
       <suite>/
         patch.diff
         expect.json
@@ -49,7 +50,7 @@ Explore sessions set up a repo workspace and drop a `northx` wrapper that logs e
 
 ```bash
 bun run harness:explore --repo shadcn-ui --mode shell --session baseline
-./northx check --json --config ./north/north.config.yaml
+./northx check --json --config ./.north/config.yaml
 ```
 
 ## Mutation suite

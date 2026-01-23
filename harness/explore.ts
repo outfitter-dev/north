@@ -113,13 +113,13 @@ async function renderNorthxScript(options: { logRoot: string; cliPath: string })
 }
 
 async function ensureNorthConfig(workDir: string) {
-  const configPath = resolve(workDir, "north", "north.config.yaml");
+  const configPath = resolve(workDir, ".north", "config.yaml");
   if (await pathExists(configPath)) {
     return;
   }
 
-  const fixtureDir = repoPath("harness", "fixtures", "north", "north");
-  await copyDir(fixtureDir, resolve(workDir, "north"));
+  const fixtureDir = repoPath("harness", "fixtures", "north", ".north");
+  await copyDir(fixtureDir, resolve(workDir, ".north"));
 }
 
 interface SessionIndexEntry {

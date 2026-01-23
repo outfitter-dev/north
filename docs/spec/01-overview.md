@@ -45,7 +45,7 @@ North supports two complementary switching mechanisms:
 
 **Build-time generation (dial changes):**
 - Dials like `radius`, `density`, `shadows` are design decisions
-- Changing a dial regenerates `north/tokens/generated.css`
+- Changing a dial regenerates `.north/tokens/generated.css`
 - Run `north gen` after config changes
 - Requires rebuild/deploy
 
@@ -53,7 +53,7 @@ The distinction: **dark/light is a user preference toggle. Dial changes are desi
 
 Configuration example:
 ```yaml
-# north.config.yaml
+# .north/config.yaml
 switching:
   runtime:
     - light-dark     # .dark class or [data-theme="dark"]
@@ -71,7 +71,7 @@ This means a single CSS bundle supports light/dark/contrast combinations, but di
 
 North enforcement covers:
 - ✅ TSX/JSX component files (class strings, inline styles)
-- ✅ CSS files defining tokens (`globals.css`, `north/tokens/*`)
+- ✅ CSS files defining tokens (`globals.css`, `.north/tokens/*`)
 - ✅ Tailwind config extensions
 
 North does **not** enforce (v0.1):

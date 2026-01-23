@@ -38,11 +38,6 @@ Thumbs.db
 # Test coverage
 coverage/
 
-# North index
-.north/index.db
-.north/index.db-wal
-.north/index.db-shm
-
 # Temporary files
 *.tmp
 *.temp

@@ -1,0 +1,5 @@
+# North generated state (safe to delete)
+state/
+
+# Optional: default-ignore reports unless explicitly committed
+# reports/

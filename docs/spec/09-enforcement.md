@@ -35,7 +35,7 @@ note: |
 ### Enforcement Levels
 
 ```yaml
-# north.config.yaml
+# .north/config.yaml
 rules:
   # Locked by base - cannot override
   no-raw-palette: error

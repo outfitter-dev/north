@@ -15,7 +15,7 @@ This phase implements the configuration system and token generation engine. By t
 
 ### 1.1 Config System
 
-- [ ] Define `north.config.yaml` schema (TypeScript types + runtime validation)
+- [ ] Define `.north/config.yaml` schema (TypeScript types + runtime validation)
 - [ ] Zod schema for config validation (TS types alone won't guard user YAML)
 - [ ] Config loader with validation
 - [ ] `extends` resolution (local files, npm packages, registry URLs; last-wins merge)
@@ -30,9 +30,9 @@ This phase implements the configuration system and token generation engine. By t
 
 ### 1.3 Init Command
 
-- [ ] `north init` scaffolds `north/` directory
-- [ ] Creates default `north.config.yaml`
-- [ ] Creates `north/tokens/base.css`
+- [ ] `north init` scaffolds `.north/` directory
+- [ ] Creates default `.north/config.yaml`
+- [ ] Creates `.north/tokens/base.css`
 - [ ] Runs initial `north gen`
 
 ### 1.4 Primitive Doctor (debugging aid)

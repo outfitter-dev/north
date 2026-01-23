@@ -52,9 +52,9 @@ bun add -d north
 
 **Committable index for CI:**
 ```yaml
-# north.config.yaml
+# .north/config.yaml
 index:
-  path: ".north/index.db"
+  path: "index.db"  # relative to .north/
   committable: true  # Include in repo for CI use
 ```
 
@@ -108,4 +108,3 @@ An LSP server transforms North from a CLI tool into a real-time development comp
 
 **Why this matters:**
 The LSP closes the feedback loop. Today: write code → run check → see errors → fix. With LSP: write code → see errors immediately → fix as you go. The design system becomes ambient rather than a checkpoint.
-

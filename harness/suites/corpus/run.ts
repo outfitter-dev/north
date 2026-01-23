@@ -95,7 +95,7 @@ export async function runCorpusSuite(options: CorpusRunOptions = {}) {
     }
 
     await ensureNorthConfig(workDir);
-    const configPath = resolve(workDir, "north", "north.config.yaml");
+    const configPath = resolve(workDir, ".north", "config.yaml");
     await injectProbe(workDir, repo.paths);
 
     const warnings: string[] = [];
@@ -195,12 +195,12 @@ async function loadCorpusConfig(): Promise<CorpusConfig> {
 }
 
 async function ensureNorthConfig(workDir: string) {
-  const configPath = resolve(workDir, "north", "north.config.yaml");
-  const rulesDir = resolve(workDir, "north", "rules");
-  const fixtureDir = harnessPath("fixtures", "north", "north");
+  const configPath = resolve(workDir, ".north", "config.yaml");
+  const rulesDir = resolve(workDir, ".north", "rules");
+  const fixtureDir = harnessPath("fixtures", "north", ".north");
 
   if (!(await pathExists(configPath))) {
-    await copyDir(fixtureDir, resolve(workDir, "north"));
+    await copyDir(fixtureDir, resolve(workDir, ".north"));
     return;
   }
 
