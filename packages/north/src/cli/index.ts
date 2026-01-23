@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
+import { adopt } from "../commands/adopt.ts";
 import { check } from "../commands/check.ts";
+import { classify } from "../commands/classify.ts";
 import { context } from "../commands/context.ts";
 import { doctor } from "../commands/doctor.ts";
 import { find } from "../commands/find.ts";
@@ -10,10 +12,19 @@ import { runIndex } from "../commands/index.ts";
 import { init } from "../commands/init.ts";
 import { migrate } from "../commands/migrate.ts";
 import { promote } from "../commands/promote.ts";
+import { propose } from "../commands/propose.ts";
 import { refactor } from "../commands/refactor.ts";
 import { version } from "../version.ts";
 
 const program = new Command();
+
+function parseRuleList(value: string, previous: string[] = []): string[] {
+  const parts = value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  return [...previous, ...parts];
+}
 
 program
   .name("north")
@@ -182,6 +193,41 @@ program
   });
 
 // ============================================================================
+// adopt - Adoption candidates
+// ============================================================================
+
+program
+  .command("adopt")
+  .description("Discover patterns worth tokenizing")
+  .option("-c, --config <path>", "Path to config file")
+  .option("--min-count <number>", "Minimum occurrences to consider", Number.parseInt)
+  .option("--min-files <number>", "Minimum distinct files", Number.parseInt)
+  .option("--max-classes <number>", "Maximum classes in pattern", Number.parseInt)
+  .option("--category <type>", "Filter: colors | spacing | typography | all")
+  .option("--sort <field>", "Sort by: count | files | impact")
+  .option("--limit <number>", "Limit results", Number.parseInt)
+  .option("--json", "Output JSON")
+  .option("-q, --quiet", "Suppress output")
+  .action(async (options) => {
+    try {
+      await adopt({
+        cwd: process.cwd(),
+        config: options.config,
+        minCount: options.minCount,
+        minFiles: options.minFiles,
+        maxClasses: options.maxClasses,
+        category: options.category,
+        sort: options.sort,
+        limit: options.limit,
+        json: options.json,
+        quiet: options.quiet,
+      });
+    } catch {
+      process.exit(1);
+    }
+  });
+
+// ============================================================================
 // promote - Promote class pattern to utility/token
 // ============================================================================
 
@@ -275,6 +321,105 @@ program
     });
 
     if (!result.success) {
+      process.exit(1);
+    }
+  });
+
+// ============================================================================
+// classify - Classify components by context
+// ============================================================================
+
+program
+  .command("classify")
+  .description("Classify component context (primitive, composed, layout)")
+  .argument("[files...]", "Glob patterns or file paths (default: all indexed files)")
+  .option("-c, --config <path>", "Path to config file")
+  .option("--context <type>", "Context to assign: primitive | composed | layout")
+  .option("--auto", "Auto-detect context from directory structure")
+  .option("--dry-run", "Preview changes only (default)")
+  .option("--apply", "Apply changes to index/files")
+  .option("--json", "Output JSON")
+  .option("-q, --quiet", "Suppress output")
+  .action(async (files, options) => {
+    try {
+      const apply = options.apply === true && options.dryRun !== true;
+      const dryRun = options.dryRun ?? !apply;
+
+      const report = await classify({
+        cwd: process.cwd(),
+        config: options.config,
+        files: files && files.length > 0 ? files : undefined,
+        context: options.context,
+        auto: options.auto,
+        dryRun,
+        apply,
+        json: options.json,
+        quiet: options.quiet,
+      });
+
+      if (options.quiet) {
+        return;
+      }
+
+      if (options.json) {
+        console.log(JSON.stringify(report, null, 2));
+        return;
+      }
+
+      const title = report.applied ? "Classification applied" : "Classification preview";
+      console.log(
+        `${title}: ${report.summary.changed} change(s) across ${report.summary.total} files`
+      );
+      console.log(
+        `  primitive: ${report.summary.primitive}, composed: ${report.summary.composed}, layout: ${report.summary.layout}`
+      );
+
+      if (!report.applied && report.summary.changed > 0) {
+        console.log("Run with --apply to write changes to the index.");
+      }
+    } catch {
+      process.exit(1);
+    }
+  });
+
+// ============================================================================
+// propose - Generate migration plan
+// ============================================================================
+
+program
+  .command("propose")
+  .description("Generate a migration plan from lint violations")
+  .option("-c, --config <path>", "Path to config file")
+  .option("--from <source>", "Violation source: check | stdin | <file.json>")
+  .option("-o, --output <path>", "Output plan file (default: .north/state/migration-plan.json)")
+  .option("--strategy <type>", "Strategy: conservative | balanced | aggressive")
+  .option("--include <rules>", "Only include these rules (comma-separated)", parseRuleList, [])
+  .option("--exclude <rules>", "Exclude these rules (comma-separated)", parseRuleList, [])
+  .option("--max-changes <number>", "Maximum changes per file", Number.parseInt)
+  .option("--dry-run", "Preview plan only (don't write file)")
+  .option("--json", "Output JSON to stdout instead of file")
+  .option("-q, --quiet", "Suppress output")
+  .action(async (options) => {
+    try {
+      await propose({
+        cwd: process.cwd(),
+        config: options.config,
+        from: options.from,
+        output: options.output,
+        strategy: options.strategy,
+        include: options.include.length > 0 ? options.include : undefined,
+        exclude: options.exclude.length > 0 ? options.exclude : undefined,
+        maxChanges: options.maxChanges,
+        dryRun: options.dryRun,
+        json: options.json,
+        quiet: options.quiet,
+      });
+    } catch (error) {
+      if (options.quiet) {
+        process.exit(1);
+      }
+      const message = error instanceof Error ? error.message : "Failed to generate migration plan.";
+      console.error(message);
       process.exit(1);
     }
   });
