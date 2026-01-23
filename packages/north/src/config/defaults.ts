@@ -83,6 +83,12 @@ export const DEFAULT_CONFIG: NorthConfig = {
     "no-raw-palette": { level: "error" },
     "no-arbitrary-colors": { level: "error" },
     "no-arbitrary-values": { level: "error" },
+    "repeated-spacing-pattern": {
+      level: "warn",
+      options: {
+        "min-consecutive-spaces": 2,
+      },
+    },
     "component-complexity": {
       level: "warn",
       options: {
@@ -160,6 +166,11 @@ rules:
     level: error
   no-arbitrary-values:
     level: error
+
+  repeated-spacing-pattern:
+    level: warn
+    options:
+      min-consecutive-spaces: 2
 
   component-complexity:
     level: warn

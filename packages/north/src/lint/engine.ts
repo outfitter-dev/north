@@ -13,6 +13,7 @@ import { isIssueCoveredByDeviation, parseCandidates, parseDeviations } from "./c
 import { getContext } from "./context.ts";
 import { extractClassTokens, extractComponentDefinitions } from "./extract.ts";
 import { getIgnorePatterns } from "./ignores.ts";
+import { extractRepeatedSpacingIssues } from "./repeated-spacing.ts";
 import { loadRules } from "./rules.ts";
 import { DEFAULT_PROMOTION_THRESHOLD, aggregateDeviations } from "./tracking.ts";
 import type {
@@ -493,6 +494,29 @@ function evaluateMissingSemanticComment(
   return issues;
 }
 
+function evaluateRepeatedSpacingPattern(
+  source: string,
+  filePath: string,
+  config: NorthConfig
+): LintIssue[] {
+  const ruleConfig = resolveBuiltinRuleConfig(config, "repeated-spacing-pattern", "warn");
+
+  if (ruleConfig.level === "off") {
+    return [];
+  }
+
+  if (isFileIgnored(filePath, ruleConfig.ignore)) {
+    return [];
+  }
+
+  return extractRepeatedSpacingIssues(
+    source,
+    filePath,
+    ruleConfig.level as Exclude<RuleSeverity, "off">,
+    ruleConfig.options
+  );
+}
+
 function scanInlineColorStyles(source: string, filePath: string, config: NorthConfig): LintIssue[] {
   const ruleConfig = resolveBuiltinRuleConfig(config, "no-inline-color", "error");
 
@@ -599,6 +623,9 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
         // Check for missing @north-role semantic comments on exported components
         const fileContext = getContext(displayPath, source);
         rawIssues.push(...evaluateMissingSemanticComment(source, displayPath, fileContext, config));
+
+        // Check for repeated spacing patterns in strings, JSX text, or comments
+        rawIssues.push(...evaluateRepeatedSpacingPattern(source, displayPath, config));
       }
     } catch (error) {
       const ruleConfig = resolveBuiltinRuleConfig(config, "parse-error", "error");
