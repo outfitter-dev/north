@@ -1,15 +1,14 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { detectContext, detectProjectState, getConfigPath, getIndexPath } from "./state.ts";
 
 describe("detectProjectState", () => {
-  const testDir = resolve(import.meta.dir, ".test-fixtures");
+  let testDir: string;
 
   beforeEach(async () => {
-    // Create fresh test directory
-    await rm(testDir, { recursive: true, force: true });
-    await mkdir(testDir, { recursive: true });
+    testDir = await mkdtemp(resolve(tmpdir(), "north-state-"));
   });
 
   afterEach(async () => {
@@ -49,11 +48,10 @@ describe("detectProjectState", () => {
 });
 
 describe("detectContext", () => {
-  const testDir = resolve(import.meta.dir, ".test-fixtures-context");
+  let testDir: string;
 
   beforeEach(async () => {
-    await rm(testDir, { recursive: true, force: true });
-    await mkdir(testDir, { recursive: true });
+    testDir = await mkdtemp(resolve(tmpdir(), "north-context-"));
   });
 
   afterEach(async () => {
