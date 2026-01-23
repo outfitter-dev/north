@@ -267,6 +267,8 @@ The principles are portable—SwiftUI, Flutter, and other platforms are future e
 └─────────────────────────────────────────┘
 ```
 
+Extends can point to in-repo presets, npm packages, or registry URLs. When multiple presets are listed, they are applied in order and later layers win.
+
 ---
 
 ## The Philosophy
