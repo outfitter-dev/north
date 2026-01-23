@@ -83,10 +83,6 @@ export const DEFAULT_CONFIG: NorthConfig = {
     "no-raw-palette": "error",
     "no-arbitrary-colors": "error",
     "no-arbitrary-values": "error",
-    "repeated-spacing-pattern": {
-      level: "warn",
-      threshold: 3,
-    },
     "component-complexity": {
       level: "warn",
       "max-classes": 15,
@@ -157,10 +153,6 @@ rules:
   no-raw-palette: error
   no-arbitrary-colors: error
   no-arbitrary-values: error
-
-  repeated-spacing-pattern:
-    level: warn
-    threshold: 3
 
   component-complexity:
     level: warn
