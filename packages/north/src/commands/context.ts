@@ -62,6 +62,7 @@ const RULE_KEYS = [
   "no-raw-palette",
   "no-arbitrary-colors",
   "no-arbitrary-values",
+  "repeated-spacing-pattern",
   "non-literal-classname",
   "no-inline-color",
   "component-complexity",

@@ -130,6 +130,7 @@ export const RulesConfigSchema = z
     "missing-semantic-comment": RuleConfigSchema.optional(),
     "parse-error": RuleConfigSchema.optional(),
     "deviation-tracking": RuleConfigSchema.optional(),
+    "repeated-spacing-pattern": RuleConfigSchema.optional(),
     "extract-repeated-classes": RuleConfigSchema.optional(),
   })
   .catchall(RuleConfigSchema)

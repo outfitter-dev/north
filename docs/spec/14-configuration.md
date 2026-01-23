@@ -44,6 +44,10 @@ rules:
     level: error
 
   # Configurable warnings
+  repeated-spacing-pattern:
+    level: warn
+    options:
+      min-consecutive-spaces: 2
   component-complexity:
     level: warn
     options:
