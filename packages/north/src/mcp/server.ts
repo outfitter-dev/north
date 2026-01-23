@@ -7,6 +7,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { version } from "../version.ts";
 import { registerAdoptTool } from "./tools/adopt-tool.ts";
 import { registerCheckTool } from "./tools/check.ts";
 import { registerClassifyTool } from "./tools/classify-tool.ts";
@@ -25,7 +26,6 @@ import { registerQueryTool } from "./tools/query.ts";
 import { registerRefactorTool } from "./tools/refactor.ts";
 import { registerSuggestTool } from "./tools/suggest.ts";
 import type { ServerState } from "./types.ts";
-import { version } from "../version.ts";
 
 // Re-export getGuidance for backward compatibility with tests
 export { getGuidance };
