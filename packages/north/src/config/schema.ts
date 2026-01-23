@@ -218,7 +218,10 @@ export type IndexConfig = z.infer<typeof IndexConfigSchema>;
 // ============================================================================
 
 export const NorthConfigSchema = z.object({
-  extends: z.string().nullable().optional(),
+  extends: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
   dials: DialsConfigSchema.optional(),
   typography: TypographyConfigSchema.optional(),
   policy: PolicyConfigSchema.optional(),
