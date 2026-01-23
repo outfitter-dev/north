@@ -1,0 +1,12 @@
+{
+  "cmd": "bun",
+  "args": [
+    "harness/utils/lint-runner.ts",
+    "--config",
+    "north/north.config.yaml",
+    "--files",
+    "fixtures/harness/app/[slug]/page.tsx",
+    "--files",
+    "fixtures/harness/glob/*.tsx"
+  ]
+}
