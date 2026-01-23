@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
 import { glob } from "glob";
 import { minimatch } from "minimatch";
@@ -239,6 +239,19 @@ function sortIssues(issues: LintIssue[]): LintIssue[] {
   });
 }
 
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function looksLikeGlob(pattern: string): boolean {
+  return /[*?[\]{}]/.test(pattern);
+}
+
 async function loadProjectConfig(cwd: string, configOverride?: string) {
   const configPath = await resolveConfigPath(cwd, configOverride);
   if (!configPath) {
@@ -261,7 +274,32 @@ async function listFiles(
   fileOverrides?: string[]
 ): Promise<string[]> {
   if (fileOverrides && fileOverrides.length > 0) {
-    return fileOverrides.map((file) => (isAbsolute(file) ? file : resolve(rootDir, file)));
+    const explicitFiles: string[] = [];
+    const globPatterns: string[] = [];
+
+    for (const file of fileOverrides) {
+      const resolved = isAbsolute(file) ? file : resolve(rootDir, file);
+      if (await pathExists(resolved)) {
+        explicitFiles.push(resolved);
+        continue;
+      }
+
+      if (looksLikeGlob(file)) {
+        globPatterns.push(resolved);
+      } else {
+        explicitFiles.push(resolved);
+      }
+    }
+
+    const globMatches =
+      globPatterns.length > 0
+        ? await glob(globPatterns, {
+            absolute: true,
+            nodir: true,
+          })
+        : [];
+
+    return [...explicitFiles, ...globMatches];
   }
 
   const ignorePatterns = getIgnorePatterns(config);
