@@ -111,36 +111,28 @@ export type ColorsConfig = z.infer<typeof ColorsConfigSchema>;
 export const RuleLevelSchema = z.enum(["error", "warn", "info", "off"]);
 export type RuleLevel = z.infer<typeof RuleLevelSchema>;
 
-/** Base rule config with optional level and per-rule file ignores */
-export const BaseRuleConfigSchema = z.object({
+/** Uniform rule config with optional level, ignores, and options */
+export const RuleConfigSchema = z.object({
   level: RuleLevelSchema.optional(),
   ignore: z.array(z.string()).optional(),
+  options: z.record(z.string(), z.unknown()).optional(),
 });
-
-/** Rule config that accepts either a level string or an object with level and ignore */
-export const SimpleRuleConfigSchema = z.union([RuleLevelSchema, BaseRuleConfigSchema]);
+export type RuleConfig = z.infer<typeof RuleConfigSchema>;
 
 export const RulesConfigSchema = z
   .object({
-    "no-raw-palette": SimpleRuleConfigSchema.optional(),
-    "no-arbitrary-colors": SimpleRuleConfigSchema.optional(),
-    "no-arbitrary-values": SimpleRuleConfigSchema.optional(),
-    "component-complexity": z
-      .object({
-        level: RuleLevelSchema.optional(),
-        ignore: z.array(z.string()).optional(),
-        "max-classes": z.number().int().min(1).optional(),
-      })
-      .optional(),
-    "deviation-tracking": z
-      .object({
-        level: RuleLevelSchema.optional(),
-        ignore: z.array(z.string()).optional(),
-        "promote-threshold": z.number().int().min(1).optional(),
-      })
-      .optional(),
-    "extract-repeated-classes": SimpleRuleConfigSchema.optional(),
+    "no-raw-palette": RuleConfigSchema.optional(),
+    "no-arbitrary-colors": RuleConfigSchema.optional(),
+    "no-arbitrary-values": RuleConfigSchema.optional(),
+    "non-literal-classname": RuleConfigSchema.optional(),
+    "no-inline-color": RuleConfigSchema.optional(),
+    "component-complexity": RuleConfigSchema.optional(),
+    "missing-semantic-comment": RuleConfigSchema.optional(),
+    "parse-error": RuleConfigSchema.optional(),
+    "deviation-tracking": RuleConfigSchema.optional(),
+    "extract-repeated-classes": RuleConfigSchema.optional(),
   })
+  .catchall(RuleConfigSchema)
   .optional();
 
 export type RulesConfig = z.infer<typeof RulesConfigSchema>;

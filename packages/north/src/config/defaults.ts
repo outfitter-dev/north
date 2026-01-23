@@ -80,16 +80,20 @@ export const DEFAULT_CONFIG: NorthConfig = {
   },
   colors: DEFAULT_COLORS_LIGHT,
   rules: {
-    "no-raw-palette": "error",
-    "no-arbitrary-colors": "error",
-    "no-arbitrary-values": "error",
+    "no-raw-palette": { level: "error" },
+    "no-arbitrary-colors": { level: "error" },
+    "no-arbitrary-values": { level: "error" },
     "component-complexity": {
       level: "warn",
-      "max-classes": 15,
+      options: {
+        "max-classes": 15,
+      },
     },
     "deviation-tracking": {
       level: "info",
-      "promote-threshold": 3,
+      options: {
+        "promote-threshold": 3,
+      },
     },
   },
   "third-party": {
@@ -150,17 +154,22 @@ policy:
 
 # Rule configuration
 rules:
-  no-raw-palette: error
-  no-arbitrary-colors: error
-  no-arbitrary-values: error
+  no-raw-palette:
+    level: error
+  no-arbitrary-colors:
+    level: error
+  no-arbitrary-values:
+    level: error
 
   component-complexity:
     level: warn
-    max-classes: 15
+    options:
+      max-classes: 15
 
   deviation-tracking:
     level: info
-    promote-threshold: 3
+    options:
+      promote-threshold: 3
 
 # Lint configuration (optional)
 # lint:

@@ -28,8 +28,10 @@ describe("executeRefactorTool", () => {
 compatibility:
   tailwind: "4"
 rules:
-  no-raw-palette: error
-  no-arbitrary-colors: error
+  no-raw-palette:
+    level: error
+  no-arbitrary-colors:
+    level: error
 `
     );
 
