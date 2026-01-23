@@ -18,7 +18,7 @@ describe("repeated-spacing-pattern", () => {
   });
 
   test("respects allow-after-line-start option", () => {
-    const source = "export function Example() { return <p>Foo\\n  bar</p>; }";
+    const source = "export function Example() { return <p>Foo\n  bar</p>; }";
     const issues = extractRepeatedSpacingIssues(source, "Example.tsx", "warn", {
       "allow-after-line-start": false,
     });
