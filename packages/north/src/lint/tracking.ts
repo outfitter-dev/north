@@ -13,14 +13,17 @@ export interface DeviationAnalysis {
 }
 
 /** Threshold for suggesting promotion to @north-candidate */
-const PROMOTION_THRESHOLD = 3;
+export const DEFAULT_PROMOTION_THRESHOLD = 3;
 
 /**
  * Aggregate deviations by rule and reason to identify repeated patterns.
  * If the same rule+reason combination appears 3+ times, suggest promoting
  * to a @north-candidate pattern.
  */
-export function aggregateDeviations(deviations: Deviation[]): DeviationAnalysis {
+export function aggregateDeviations(
+  deviations: Deviation[],
+  promotionThreshold: number = DEFAULT_PROMOTION_THRESHOLD
+): DeviationAnalysis {
   // Group deviations by rule+reason
   const groupMap = new Map<string, DeviationGroup>();
 
@@ -48,7 +51,7 @@ export function aggregateDeviations(deviations: Deviation[]): DeviationAnalysis 
 
   // Suggest candidates for groups that meet the threshold
   const suggestedCandidates: Candidate[] = groups
-    .filter((group) => group.count >= PROMOTION_THRESHOLD)
+    .filter((group) => group.count >= promotionThreshold)
     .map((group) => ({
       pattern: `${group.rule}-deviation`,
       occurrences: group.count,

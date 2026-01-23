@@ -14,7 +14,7 @@ import { getContext } from "./context.ts";
 import { extractClassTokens, extractComponentDefinitions } from "./extract.ts";
 import { getIgnorePatterns } from "./ignores.ts";
 import { loadRules } from "./rules.ts";
-import { aggregateDeviations } from "./tracking.ts";
+import { DEFAULT_PROMOTION_THRESHOLD, aggregateDeviations } from "./tracking.ts";
 import type {
   Candidate,
   ClassToken,
@@ -135,6 +135,17 @@ function resolveBuiltinRuleConfig(
   }
 
   return { level: defaultLevel, options: {} };
+}
+
+function resolveDeviationPromotionThreshold(config: NorthConfig): number {
+  const ruleConfig = config.rules?.["deviation-tracking"];
+
+  if (!ruleConfig || typeof ruleConfig === "string") {
+    return DEFAULT_PROMOTION_THRESHOLD;
+  }
+
+  const threshold = (ruleConfig as { "promote-threshold"?: number })["promote-threshold"];
+  return typeof threshold === "number" ? threshold : DEFAULT_PROMOTION_THRESHOLD;
 }
 
 function isFileIgnoredForRule(rule: LoadedRule, filePath: string): boolean {
@@ -511,7 +522,8 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
   });
 
   // Aggregate deviations for tracking and promotion suggestions
-  const deviationAnalysis = aggregateDeviations(allDeviations);
+  const promotionThreshold = resolveDeviationPromotionThreshold(config);
+  const deviationAnalysis = aggregateDeviations(allDeviations, promotionThreshold);
 
   // Merge suggested candidates from deviation analysis with parsed candidates
   const finalCandidates = [...allCandidates, ...deviationAnalysis.suggestedCandidates];
