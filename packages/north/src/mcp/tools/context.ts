@@ -49,7 +49,11 @@ const RULE_KEYS = [
   "no-raw-palette",
   "no-arbitrary-colors",
   "no-arbitrary-values",
+  "non-literal-classname",
+  "no-inline-color",
   "component-complexity",
+  "missing-semantic-comment",
+  "parse-error",
   "deviation-tracking",
 ] as const;
 

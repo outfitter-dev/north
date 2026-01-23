@@ -100,6 +100,7 @@ function adjustSeverityForContext(
 
 interface BuiltinRuleConfig {
   level: RuleSeverity;
+  ignore: string[];
   options: Record<string, unknown>;
 }
 
@@ -114,27 +115,43 @@ function resolveBuiltinRuleConfig(
 ): BuiltinRuleConfig {
   const rulesConfig = config.rules;
   if (!rulesConfig) {
-    return { level: defaultLevel, options: {} };
+    return { level: defaultLevel, ignore: [], options: {} };
   }
 
   const value = rulesConfig[ruleKey as keyof typeof rulesConfig];
   if (!value) {
-    return { level: defaultLevel, options: {} };
+    return { level: defaultLevel, ignore: [], options: {} };
   }
 
   // Handle string level (e.g., "off", "warn", "error")
   if (typeof value === "string") {
-    return { level: value as RuleSeverity, options: {} };
+    return { level: value as RuleSeverity, ignore: [], options: {} };
   }
 
-  // Handle object config (e.g., { level: "warn", "max-classes": 10 })
+  // Handle object config (e.g., { level: "warn", options: { "max-classes": 10 } })
   if (typeof value === "object") {
     const level = "level" in value && value.level ? (value.level as RuleSeverity) : defaultLevel;
-    const { level: _level, ignore: _ignore, ...options } = value as Record<string, unknown>;
-    return { level, options };
+    const ignore =
+      "ignore" in value && Array.isArray(value.ignore) ? (value.ignore as string[]) : [];
+    const {
+      level: _level,
+      ignore: _ignore,
+      options: rawOptions,
+      ...legacy
+    } = value as Record<string, unknown>;
+
+    const options: Record<string, unknown> = {};
+    if (rawOptions && typeof rawOptions === "object" && !Array.isArray(rawOptions)) {
+      Object.assign(options, rawOptions as Record<string, unknown>);
+    }
+    for (const [key, optionValue] of Object.entries(legacy)) {
+      options[key] = optionValue;
+    }
+
+    return { level, ignore, options };
   }
 
-  return { level: defaultLevel, options: {} };
+  return { level: defaultLevel, ignore: [], options: {} };
 }
 
 function resolveDeviationPromotionThreshold(config: NorthConfig): number {
@@ -144,17 +161,30 @@ function resolveDeviationPromotionThreshold(config: NorthConfig): number {
     return DEFAULT_PROMOTION_THRESHOLD;
   }
 
-  const threshold = (ruleConfig as { "promote-threshold"?: number })["promote-threshold"];
-  return typeof threshold === "number" ? threshold : DEFAULT_PROMOTION_THRESHOLD;
+  const options = (ruleConfig as { options?: Record<string, unknown> }).options;
+  const optionThreshold =
+    options && typeof options["promote-threshold"] === "number"
+      ? (options["promote-threshold"] as number)
+      : undefined;
+  const legacyThreshold =
+    typeof (ruleConfig as { "promote-threshold"?: number })["promote-threshold"] === "number"
+      ? ((ruleConfig as { "promote-threshold"?: number })["promote-threshold"] as number)
+      : undefined;
+
+  return optionThreshold ?? legacyThreshold ?? DEFAULT_PROMOTION_THRESHOLD;
 }
 
-function isFileIgnoredForRule(rule: LoadedRule, filePath: string): boolean {
-  if (!rule.ignore || rule.ignore.length === 0) {
+function isFileIgnored(filePath: string, ignore?: string[]): boolean {
+  if (!ignore || ignore.length === 0) {
     return false;
   }
   // Normalize Windows backslashes to forward slashes for cross-platform pattern matching
   const normalizedPath = filePath.replace(/\\/g, "/");
-  return rule.ignore.some((pattern) => minimatch(normalizedPath, pattern));
+  return ignore.some((pattern) => minimatch(normalizedPath, pattern));
+}
+
+function isFileIgnoredForRule(rule: LoadedRule, filePath: string): boolean {
+  return isFileIgnored(filePath, rule.ignore);
 }
 
 function evaluateRule(rule: LoadedRule, token: ClassToken): LintIssue | null {
@@ -313,17 +343,28 @@ async function listFiles(
   return files;
 }
 
-function buildNonLiteralIssues(sites: ExtractionResult["nonLiteralSites"]): LintIssue[] {
-  return sites.map((site) => ({
-    ruleId: "north/non-literal-classname",
-    ruleKey: "non-literal-classname",
-    severity: "warn",
-    message: "className contains non-literal values; lint coverage reduced",
-    filePath: site.filePath,
-    line: site.line,
-    column: site.column,
-    context: site.context,
-  }));
+function buildNonLiteralIssues(
+  sites: ExtractionResult["nonLiteralSites"],
+  config: NorthConfig
+): LintIssue[] {
+  const ruleConfig = resolveBuiltinRuleConfig(config, "non-literal-classname", "warn");
+
+  if (ruleConfig.level === "off") {
+    return [];
+  }
+
+  return sites
+    .filter((site) => !isFileIgnored(site.filePath, ruleConfig.ignore))
+    .map((site) => ({
+      ruleId: "north/non-literal-classname",
+      ruleKey: "non-literal-classname",
+      severity: ruleConfig.level as Exclude<RuleSeverity, "off">,
+      message: "className contains non-literal values; lint coverage reduced",
+      filePath: site.filePath,
+      line: site.line,
+      column: site.column,
+      context: site.context,
+    }));
 }
 
 // Color properties that should not have literal values in inline styles
@@ -371,6 +412,10 @@ function evaluateComponentComplexity(
     return [];
   }
 
+  if (isFileIgnored(filePath, ruleConfig.ignore)) {
+    return [];
+  }
+
   const issues: LintIssue[] = [];
 
   // Use configured max-classes if provided, otherwise use context-specific defaults
@@ -409,8 +454,19 @@ function evaluateComponentComplexity(
 function evaluateMissingSemanticComment(
   source: string,
   filePath: string,
-  context: string
+  context: string,
+  config: NorthConfig
 ): LintIssue[] {
+  const ruleConfig = resolveBuiltinRuleConfig(config, "missing-semantic-comment", "info");
+
+  if (ruleConfig.level === "off") {
+    return [];
+  }
+
+  if (isFileIgnored(filePath, ruleConfig.ignore)) {
+    return [];
+  }
+
   // Only apply to composed context
   if (context !== "composed") {
     return [];
@@ -424,7 +480,7 @@ function evaluateMissingSemanticComment(
       issues.push({
         ruleId: "north/missing-semantic-comment",
         ruleKey: "missing-semantic-comment",
-        severity: "info",
+        severity: ruleConfig.level as Exclude<RuleSeverity, "off">,
         message: `Exported component "${component.name}" should have @north-role JSDoc annotation`,
         filePath,
         line: component.line,
@@ -442,6 +498,10 @@ function scanInlineColorStyles(source: string, filePath: string, config: NorthCo
 
   // Skip if rule is disabled
   if (ruleConfig.level === "off") {
+    return [];
+  }
+
+  if (isFileIgnored(filePath, ruleConfig.ignore)) {
     return [];
   }
 
@@ -528,7 +588,7 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
           }
         }
 
-        rawIssues.push(...buildNonLiteralIssues(extraction.nonLiteralSites));
+        rawIssues.push(...buildNonLiteralIssues(extraction.nonLiteralSites, config));
 
         // Scan for inline style color violations
         rawIssues.push(...scanInlineColorStyles(source, displayPath, config));
@@ -538,18 +598,21 @@ export async function runLint(options: LintOptions = {}): Promise<LintRun> {
 
         // Check for missing @north-role semantic comments on exported components
         const fileContext = getContext(displayPath, source);
-        rawIssues.push(...evaluateMissingSemanticComment(source, displayPath, fileContext));
+        rawIssues.push(...evaluateMissingSemanticComment(source, displayPath, fileContext, config));
       }
     } catch (error) {
-      rawIssues.push({
-        ruleId: "north/parse-error",
-        ruleKey: "parse-error",
-        severity: "error",
-        message: `Failed to parse file: ${error instanceof Error ? error.message : String(error)}`,
-        filePath: displayPath,
-        line: 1,
-        column: 1,
-      });
+      const ruleConfig = resolveBuiltinRuleConfig(config, "parse-error", "error");
+      if (ruleConfig.level !== "off" && !isFileIgnored(displayPath, ruleConfig.ignore)) {
+        rawIssues.push({
+          ruleId: "north/parse-error",
+          ruleKey: "parse-error",
+          severity: ruleConfig.level as Exclude<RuleSeverity, "off">,
+          message: `Failed to parse file: ${error instanceof Error ? error.message : String(error)}`,
+          filePath: displayPath,
+          line: 1,
+          column: 1,
+        });
+      }
     }
   }
 

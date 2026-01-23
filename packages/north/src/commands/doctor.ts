@@ -292,11 +292,22 @@ export async function doctor(options: DoctorOptions = {}): Promise<DoctorResult>
         let source = "default";
 
         if (deviationRule && typeof deviationRule === "object") {
-          const threshold = (deviationRule as { "promote-threshold"?: number })[
-            "promote-threshold"
-          ];
-          if (typeof threshold === "number") {
-            promoteThreshold = threshold;
+          const options = (deviationRule as { options?: Record<string, unknown> }).options;
+          const optionThreshold =
+            options && typeof options["promote-threshold"] === "number"
+              ? (options["promote-threshold"] as number)
+              : undefined;
+          const legacyThreshold =
+            typeof (deviationRule as { "promote-threshold"?: number })["promote-threshold"] ===
+            "number"
+              ? ((deviationRule as { "promote-threshold"?: number })["promote-threshold"] as number)
+              : undefined;
+
+          if (typeof optionThreshold === "number") {
+            promoteThreshold = optionThreshold;
+            source = "config (rules.deviation-tracking.options.promote-threshold)";
+          } else if (typeof legacyThreshold === "number") {
+            promoteThreshold = legacyThreshold;
             source = "config (rules.deviation-tracking.promote-threshold)";
           }
         }

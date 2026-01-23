@@ -77,8 +77,10 @@ compatibility:
 compatibility:
   tailwind: "4"
 rules:
-  no-raw-palette: error
-  no-arbitrary-colors: warn
+  no-raw-palette:
+    level: error
+  no-arbitrary-colors:
+    level: warn
 `
     );
 
