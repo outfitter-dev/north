@@ -32,7 +32,7 @@ function readStringArray(value: unknown): string[] | null {
     return null;
   }
   const strings = value.filter((entry) => typeof entry === "string") as string[];
-  return strings.length > 0 ? strings : [];
+  return strings.length > 0 ? strings : null;
 }
 
 function toRegexList(patterns: string[]): RegExp[] {
