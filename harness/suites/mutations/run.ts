@@ -1,10 +1,11 @@
 import { readdir } from "node:fs/promises";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 import { type Expectation, compareExpectations, summarizeViolations } from "../../utils/diff.ts";
-import { emptyDir, readJson, writeJson, writeText } from "../../utils/fs.ts";
+import { runCommand } from "../../utils/exec.ts";
+import { emptyDir, pathExists, readJson, writeJson, writeText } from "../../utils/fs.ts";
 import { applyPatch, checkoutRef, cloneRepo, stageAll } from "../../utils/git.ts";
 import { type NorthJsonReport, parseNorthJson, runNorth } from "../../utils/north.ts";
-import { harnessPath } from "../../utils/paths.ts";
+import { harnessPath, repoPath } from "../../utils/paths.ts";
 import { readRepoRegistry, resolveRepo } from "../../utils/repos.ts";
 
 interface MutationConfig {
@@ -15,6 +16,12 @@ interface MutationConfig {
 
 interface MutationRunOptions {
   suite?: string;
+}
+
+interface MutationCommandConfig {
+  cmd: string;
+  args?: string[];
+  timeoutMs?: number;
 }
 
 interface SuiteResult {
@@ -50,6 +57,7 @@ export async function runMutationSuite(options: MutationRunOptions = {}) {
     const suiteDir = join(suitesDir, suite);
     const patchPath = join(suiteDir, "patch.diff");
     const expectPath = join(suiteDir, "expect.json");
+    const commandPath = join(suiteDir, "command.json");
     const artifactDir = harnessPath("artifacts", "mutations", suite);
     const workDir = harnessPath(".cache", "mutations", suite);
 
@@ -94,11 +102,34 @@ export async function runMutationSuite(options: MutationRunOptions = {}) {
 
     await stageAll(workDir);
 
-    const northResult = await runNorth(["check", "--json", "--staged"], workDir, {
-      timeoutMs: config.timeoutMs ?? 60_000,
-    });
+    let commandLabel = "north check --json --staged";
+    let northResult: { code: number | null; stdout: string; stderr: string; timedOut: boolean };
 
-    const commandLog = formatCommandLog("north check --json --staged", northResult);
+    if (await pathExists(commandPath)) {
+      const commandConfig = await readJson<MutationCommandConfig>(commandPath);
+      const args = commandConfig.args ?? [];
+      const resolvedArgs =
+        args.length > 0 && !isAbsolute(args[0] ?? "")
+          ? [repoPath(args[0] ?? ""), ...args.slice(1)]
+          : args;
+      commandLabel = [commandConfig.cmd, ...resolvedArgs].join(" ");
+      const commandResult = await runCommand(commandConfig.cmd, resolvedArgs, {
+        cwd: workDir,
+        timeoutMs: commandConfig.timeoutMs ?? config.timeoutMs ?? 60_000,
+      });
+      northResult = {
+        code: commandResult.code,
+        stdout: commandResult.stdout,
+        stderr: commandResult.stderr,
+        timedOut: commandResult.timedOut,
+      };
+    } else {
+      northResult = await runNorth(["check", "--json", "--staged"], workDir, {
+        timeoutMs: config.timeoutMs ?? 60_000,
+      });
+    }
+
+    const commandLog = formatCommandLog(commandLabel, northResult);
     await writeText(join(artifactDir, "command.log"), commandLog);
 
     if (northResult.timedOut || northResult.code === null) {
