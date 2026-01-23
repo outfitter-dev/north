@@ -1,0 +1,81 @@
+diff --git a/fixtures/harness/extends-resolver.tsx b/fixtures/harness/extends-resolver.tsx
+new file mode 100644
+index 0000000..6b1b23c
+--- /dev/null
++++ b/fixtures/harness/extends-resolver.tsx
+@@ -0,0 +1,4 @@
++export function ExtendsResolver() {
++  const repeatedSpacingMarker = "  leading spaces";
++  return <div><div className="flex items-center gap-2" /><div className="LOCAL_PRESET_TRIGGER">{repeatedSpacingMarker}</div></div>;
++}
+diff --git a/node_modules/@north/harness-preset/package.json b/node_modules/@north/harness-preset/package.json
+new file mode 100644
+index 0000000..8ef6614
+--- /dev/null
++++ b/node_modules/@north/harness-preset/package.json
+@@ -0,0 +1,8 @@
++{
++  "name": "@north/harness-preset",
++  "version": "0.0.0",
++  "private": true,
++  "north": {
++    "preset": "preset.yaml"
++  }
++}
+diff --git a/node_modules/@north/harness-preset/preset.yaml b/node_modules/@north/harness-preset/preset.yaml
+new file mode 100644
+index 0000000..127402c
+--- /dev/null
++++ b/node_modules/@north/harness-preset/preset.yaml
+@@ -0,0 +1,7 @@
++extends: null
++
++rules:
++  component-complexity:
++    level: warn
++    options:
++      max-classes: 2
+diff --git a/north/north.config.yaml b/north/north.config.yaml
+index 5572626..a3750d7 100644
+--- a/north/north.config.yaml
++++ b/north/north.config.yaml
+@@ -1,4 +1,7 @@
+-extends: null
++extends:
++  - ./presets/local.yaml
++  - "@north/harness-preset"
++  - harness-registry
+ 
+ rules:
+   no-raw-palette:
+@@ -10,3 +13,6 @@ rules:
+   missing-semantic-comment:
+     level: off
+ 
++registry:
++  url: 'data:application/json,{"preset":"{name}","rules":{"repeated-spacing-pattern":{"level":"warn","options":{"allow-after-line-start":false}}}}'
++
+diff --git a/north/presets/local.yaml b/north/presets/local.yaml
+new file mode 100644
+index 0000000..24c34ab
+--- /dev/null
++++ b/north/presets/local.yaml
+@@ -0,0 +1,5 @@
++extends: null
++
++rules:
++  local-preset:
++    level: error
+diff --git a/north/rules/local-preset.yaml b/north/rules/local-preset.yaml
+new file mode 100644
+index 0000000..7a40cea
+--- /dev/null
++++ b/north/rules/local-preset.yaml
+@@ -0,0 +1,7 @@
++id: north/local-preset
++language: tsx
++severity: off
++message: "Local preset rule should trigger"
++rule:
++  kind: string_fragment
++  regex: "LOCAL_PRESET_TRIGGER"

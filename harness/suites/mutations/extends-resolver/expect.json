@@ -1,0 +1,7 @@
+{
+  "rules": {
+    "north/local-preset": 1,
+    "north/component-complexity": 1,
+    "north/repeated-spacing-pattern": 1
+  }
+}
