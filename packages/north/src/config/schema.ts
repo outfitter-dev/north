@@ -125,13 +125,6 @@ export const RulesConfigSchema = z
     "no-raw-palette": SimpleRuleConfigSchema.optional(),
     "no-arbitrary-colors": SimpleRuleConfigSchema.optional(),
     "no-arbitrary-values": SimpleRuleConfigSchema.optional(),
-    "repeated-spacing-pattern": z
-      .object({
-        level: RuleLevelSchema.optional(),
-        ignore: z.array(z.string()).optional(),
-        threshold: z.number().int().min(1).optional(),
-      })
-      .optional(),
     "component-complexity": z
       .object({
         level: RuleLevelSchema.optional(),
