@@ -25,6 +25,7 @@ import { registerQueryTool } from "./tools/query.ts";
 import { registerRefactorTool } from "./tools/refactor.ts";
 import { registerSuggestTool } from "./tools/suggest.ts";
 import type { ServerState } from "./types.ts";
+import { version } from "../version.ts";
 
 // Re-export getGuidance for backward compatibility with tests
 export { getGuidance };
@@ -34,7 +35,6 @@ export { getGuidance };
 // ============================================================================
 
 const SERVER_NAME = "north";
-const SERVER_VERSION = "0.1.0";
 
 /**
  * Server instructions for Claude Code Tool Search discovery.
@@ -245,7 +245,7 @@ export function createServer(): McpServer {
   const server = new McpServer(
     {
       name: SERVER_NAME,
-      version: SERVER_VERSION,
+      version,
     },
     {
       capabilities: {

@@ -11,15 +11,14 @@ import { init } from "../commands/init.ts";
 import { migrate } from "../commands/migrate.ts";
 import { promote } from "../commands/promote.ts";
 import { refactor } from "../commands/refactor.ts";
-
-const VERSION = "0.1.0";
+import { version } from "../version.ts";
 
 const program = new Command();
 
 program
   .name("north")
   .description("Design system enforcement CLI tool")
-  .version(VERSION, "-v, --version", "Output the current version");
+  .version(version, "-v, --version", "Output the current version");
 
 // ============================================================================
 // init - Initialize North in project

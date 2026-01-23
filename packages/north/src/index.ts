@@ -1,6 +1,6 @@
 // Main library entry point
 
-export const version = "0.1.0";
+export { version } from "./version.ts";
 
 // Config exports
 export {
