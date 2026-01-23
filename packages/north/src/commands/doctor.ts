@@ -10,6 +10,7 @@ import { parseCssTokens } from "../index/css.ts";
 import { openIndexDatabase } from "../index/db.ts";
 import { checkIndexFresh, getIndexStatus } from "../index/queries.ts";
 import { runLint } from "../lint/engine.ts";
+import { DEFAULT_PROMOTION_THRESHOLD } from "../lint/tracking.ts";
 
 // ============================================================================
 // Doctor Command
@@ -283,6 +284,32 @@ export async function doctor(options: DoctorOptions = {}): Promise<DoctorResult>
         log(chalk.dim(`  shadows: ${config.dials?.shadows ?? "default"}`));
         log(chalk.dim(`  density: ${config.dials?.density ?? "default"}`));
         log(chalk.dim(`  contrast: ${config.dials?.contrast ?? "default"}`));
+      }
+
+      if (config) {
+        const deviationRule = config.rules?.["deviation-tracking"];
+        let promoteThreshold = DEFAULT_PROMOTION_THRESHOLD;
+        let source = "default";
+
+        if (deviationRule && typeof deviationRule === "object") {
+          const threshold = (deviationRule as { "promote-threshold"?: number })[
+            "promote-threshold"
+          ];
+          if (typeof threshold === "number") {
+            promoteThreshold = threshold;
+            source = "config (rules.deviation-tracking.promote-threshold)";
+          }
+        }
+
+        const check = {
+          name: "Deviation promotion threshold",
+          status: "ok",
+          message: `Using promote-threshold: ${promoteThreshold}`,
+          details: [`Source: ${source}`],
+        } satisfies Check;
+
+        pushCheck(checks, check);
+        logCheck(log, check);
       }
     }
   }
