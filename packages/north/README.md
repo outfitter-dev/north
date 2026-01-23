@@ -55,6 +55,10 @@ north doctor                  # Health check
 north context --compact        # LLM/system prompt context
 ```
 
+## Project files
+
+North stores project assets in `.north/` and expects it to be tracked. The derived index lives in `.north/state/` and is ignored by default via `.north/.gitignore`.
+
 ## Development
 
 This package is part of the North monorepo.
