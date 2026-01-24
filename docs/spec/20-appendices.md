@@ -279,10 +279,10 @@ This enables light/dark/contrast switching without rebuild:
 
 ### Generated vs Hand-Maintained
 
-North's CLI generates the `@theme` block from `north.config.yaml`:
+North's CLI generates the `@theme` block from `.north/config.yaml`:
 
 ```bash
-north gen  # Outputs north/tokens/generated.css
+north gen  # Outputs .north/tokens/generated.css
 ```
 
 The generated file is committed to the repo. When dials change, regenerate and review the diff.

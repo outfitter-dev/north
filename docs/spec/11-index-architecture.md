@@ -4,30 +4,31 @@ North maintains a SQLite index for instant queries across the codebase. Without 
 
 ### Index Location
 
-North uses two directories with distinct purposes:
+North keeps all project artifacts in a package-local `.north/` directory with a clear split between committed assets and disposable state:
 
 ```
-north/                        # Source of truth (committed)
-├── north.config.yaml         # Main config, dials, extends
-├── rules/                    # Custom lint rules
-└── tokens/
-    ├── base.css              # Hand-authored token extensions
-    └── generated.css         # Output from `north gen` (committed)
-
-.north/                       # Cache/derived data
-└── index.db                  # SQLite index (optionally committed)
+.north/                       # Project config + assets
+├── config.yaml               # Main config, dials, extends
+├── presets/                  # In-repo presets (committed)
+├── rules/                    # Custom lint rules (committed)
+├── tokens/
+│   ├── base.css              # Hand-authored token extensions
+│   └── generated.css         # Output from `north gen` (committed)
+├── state/                    # Generated state (ignored)
+│   └── index.db              # SQLite index (default)
+└── .gitignore                # Ignores state/ by default
 ```
 
-**Convention:** `north/` contains source files you author; `.north/` contains derived artifacts.
+**Convention:** `.north/` contains source-of-truth files (config/presets/tokens/rules) and derived artifacts in `state/`.
 
 ### Committable Index
 
 For CI and remote execution scenarios, the index can be committed to the repo:
 
 ```yaml
-# north.config.yaml
+# .north/config.yaml
 index:
-  path: ".north/index.db"
+  path: "index.db"  # relative to .north/
   committable: true
 ```
 
@@ -73,26 +74,26 @@ INSERT INTO meta (key, value) VALUES
 
 ### Git Configuration
 
-**Recommended `.gitignore`:**
+**Recommended `.north/.gitignore`:**
 ```gitignore
-# North - only ignore SQLite sidecar files if not using committable index
-.north/index.db-wal
-.north/index.db-shm
+# Generated state (safe to delete)
+state/
 
-# If NOT using committable index, also ignore the db itself:
-# .north/index.db
+# Optional: default-ignore reports unless explicitly committed
+# reports/
 ```
 
 **What to commit:**
-- `north/north.config.yaml` — always (source of truth)
-- `north/rules/` — always (custom rules)
-- `north/tokens/base.css` — always (hand-authored extensions)
-- `north/tokens/generated.css` — always (enables "diff the token changes" workflow in PRs)
-- `.north/index.db` — if `index.committable: true`
+- `.north/config.yaml` — always (source of truth)
+- `.north/presets/` — always (in-repo presets)
+- `.north/rules/` — always (custom rules)
+- `.north/tokens/base.css` — always (hand-authored extensions)
+- `.north/tokens/generated.css` — always (enables "diff the token changes" workflow in PRs)
+- `.north/index.db` — if `index.committable: true` and `index.path` points outside `state/`
 
 **What to gitignore:**
-- `.north/index.db-wal`, `.north/index.db-shm` — SQLite sidecar files (should never exist if WAL disabled)
-- `.north/index.db` — only if `index.committable: false` (default)
+- `.north/state/` — generated index and derived artifacts (default)
+- `.north/reports/` — optional reports
 
 **Why commit generated.css?**
 - PRs show token changes as reviewable diffs
@@ -112,7 +113,7 @@ SQLite files are binary — git cannot merge them. When parallel branches both m
 # 1. Accept either version of index.db (doesn't matter which)
 git checkout --ours .north/index.db
 
-# 2. Resolve north.config.yaml conflicts normally (it's YAML, git can help)
+# 2. Resolve .north/config.yaml conflicts normally (it's YAML, git can help)
 # ... manual merge ...
 
 # 3. Rebuild index from merged config
@@ -259,4 +260,3 @@ Index is automatically refreshed when:
 - Config changes invalidate cached computations
 
 CI can skip indexing: `north check --no-index` (slower, but no state)
-

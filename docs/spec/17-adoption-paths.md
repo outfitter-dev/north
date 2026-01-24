@@ -3,7 +3,7 @@
 ### Fresh Project
 
 1. Initialize: `npx north init`
-2. Configure dials in `north.config.yaml`
+2. Configure dials in `.north/config.yaml`
 3. Start building — agent follows North workflow automatically
 
 ### Existing Project

@@ -5,7 +5,7 @@ Third-party components (npm packages, external UI libraries) often ship with the
 
 ### Exception List
 
-Maintain an explicit list of allowed third-party components in `north.config.yaml`:
+Maintain an explicit list of allowed third-party components in `.north/config.yaml`:
 
 ```yaml
 third-party:

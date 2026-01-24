@@ -9,7 +9,7 @@ North is the **source of truth** for colors. It generates both Tailwind and shad
 
 **Flow:**
 ```
-north.config.yaml (canonical)
+.north/config.yaml (canonical)
     ↓ north gen
 ┌─────────────────────────────────────────────┐
 │ @theme {                                    │  ← Tailwind namespace (literal values)
@@ -25,7 +25,7 @@ north.config.yaml (canonical)
 ```
 
 **Why this direction:**
-- Single source of truth (north.config.yaml)
+- Single source of truth (.north/config.yaml)
 - Tailwind gets literal values in `@theme` (required for proper utility generation)
 - shadcn components work unchanged (they just see `--primary`)
 - Future platforms (SwiftUI, etc.) can consume the same North config
@@ -242,7 +242,7 @@ Effects encode *treatments* — combinations of properties that work together. E
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  DIALS (north.config.yaml)                                  │
+│  DIALS (.north/config.yaml)                                  │
 │  radius: lg, density: compact, contrast: high               │
 └─────────────────────┬───────────────────────────────────────┘
                       │ generates

@@ -1,22 +1,12 @@
----
-
-## Configuration
-
-### .north/config.yaml
-
-```yaml
 # yaml-language-server: $schema=https://north.dev/schema.json
 
-# Extend from local, npm, or registry presets (order matters, last wins)
-extends:
-  - "./presets/base.yaml"
-  - "@myorg/north-base"
-  # - "https://registry.myorg.com/north/base.json"
+# Extend from org or base (set to null for standalone)
+extends: null
 
 # Style dials
 dials:
   radius: md            # xs | sm | md | lg | full
-  shadows: subtle       # none | subtle | default | pronounced
+  shadows: default      # none | subtle | default | pronounced
   density: default      # compact | default | comfortable
   contrast: default     # low | default | high
 
@@ -30,12 +20,15 @@ typography:
 # Policy dials
 policy:
   complexity: progressive  # progressive | dense
-  # progressive = default to disclosure, expand on demand
-  # dense = show more by default, suited for power-user tools
+
+# Colors (OKLCH format)
+# Uncomment to customize:
+# colors:
+#   primary: oklch(0.546 0.245 262)
+#   background: oklch(1 0 0)
 
 # Rule configuration
 rules:
-  # Hard errors (cannot be downgraded)
   no-raw-palette:
     level: error
   no-arbitrary-colors:
@@ -43,20 +36,29 @@ rules:
   no-arbitrary-values:
     level: error
 
-  # Configurable warnings
   repeated-spacing-pattern:
     level: warn
     options:
       min-consecutive-spaces: 2
+
   component-complexity:
     level: warn
     options:
-      max-classes: 15       # Raise/lower per project needs
+      max-classes: 15
 
   deviation-tracking:
     level: info
     options:
-      promote-threshold: 3  # Suggest system addition after N deviations
+      promote-threshold: 3
+
+# Lint configuration (optional)
+# lint:
+#   classFunctions: [cn, clsx, cva]
+
+# Index configuration (optional)
+# index:
+#   path: state/index.db
+#   committable: false
 
 # Third-party component policy
 third-party:
@@ -69,14 +71,8 @@ third-party:
       reason: "Charts use --chart-* tokens"
     - package: "cmdk"
       reason: "Command palette primitive"
-      
-  prohibited: []
-  # - package: "some-lib"
-  #   reason: "Incompatible with theming"
-  #   alternative: "Use X instead"
 
-# Registry configuration
-registry:
-  namespace: "@myorg"
-  url: "https://registry.myorg.com/north/{name}.json"
-```
+# Compatibility tracking (optional)
+# compatibility:
+#   shadcn: "2.1.0"
+#   tailwind: "4.0.0"

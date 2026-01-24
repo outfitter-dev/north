@@ -1,0 +1,14 @@
+id: north/numeric-spacing-in-component
+language: tsx
+severity: warn
+message: "Use semantic spacing tokens instead of numeric values in components"
+rule:
+  kind: string_fragment
+  regex: "(p|px|py|pt|pr|pb|pl|m|mx|my|mt|mr|mb|ml|gap|gap-x|gap-y|space-x|space-y|inset|top|right|bottom|left)-\\d+(\\.\\d+)?$"
+note: |
+  In component files, prefer semantic spacing tokens:
+  - p-4 -> p-(--spacing-md)
+  - gap-2 -> gap-(--spacing-sm)
+
+  This rule is OFF in layout context where numeric spacing is acceptable.
+  This rule is ERROR in primitive context where strict token usage is required.

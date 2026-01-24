@@ -1,8 +1,8 @@
-diff --git a/north/north.config.yaml b/north/north.config.yaml
+diff --git a/.north/config.yaml b/.north/config.yaml
 new file mode 100644
 index 0000000..220f29f
 --- /dev/null
-+++ b/north/north.config.yaml
++++ b/.north/config.yaml
 @@ -0,0 +1,12 @@
 +extends: null
 +
@@ -21,11 +21,11 @@ index 0000000..220f29f
 +    - cn
 +    - clsx
 +    - cva
-diff --git a/north/rules/no-raw-palette.yaml b/north/rules/no-raw-palette.yaml
+diff --git a/.north/rules/no-raw-palette.yaml b/.north/rules/no-raw-palette.yaml
 new file mode 100644
 index 0000000..2413f63
 --- /dev/null
-+++ b/north/rules/no-raw-palette.yaml
++++ b/.north/rules/no-raw-palette.yaml
 @@ -0,0 +1,12 @@
 +id: north/no-raw-palette
 +language: tsx
@@ -39,11 +39,11 @@ index 0000000..2413f63
 +  - bg-blue-500 -> bg-primary
 +  - text-gray-600 -> text-muted-foreground
 +  - border-slate-200 -> border-border
-diff --git a/north/rules/no-arbitrary-values.yaml b/north/rules/no-arbitrary-values.yaml
+diff --git a/.north/rules/no-arbitrary-values.yaml b/.north/rules/no-arbitrary-values.yaml
 new file mode 100644
 index 0000000..a131241
 --- /dev/null
-+++ b/north/rules/no-arbitrary-values.yaml
++++ b/.north/rules/no-arbitrary-values.yaml
 @@ -0,0 +1,14 @@
 +id: north/no-arbitrary-values
 +language: tsx
@@ -59,11 +59,11 @@ index 0000000..a131241
 +  Bracket values are allowed only if they reference a token:
 +  - p-[calc(var(--spacing-md)*1.5)]
 +  - w-[calc(var(--sidebar-width)+var(--spacing-lg))]
-diff --git a/north/rules/no-arbitrary-colors.yaml b/north/rules/no-arbitrary-colors.yaml
+diff --git a/.north/rules/no-arbitrary-colors.yaml b/.north/rules/no-arbitrary-colors.yaml
 new file mode 100644
 index 0000000..8e261f5
 --- /dev/null
-+++ b/north/rules/no-arbitrary-colors.yaml
++++ b/.north/rules/no-arbitrary-colors.yaml
 @@ -0,0 +1,10 @@
 +id: north/no-arbitrary-colors
 +language: tsx
