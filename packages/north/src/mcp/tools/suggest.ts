@@ -12,7 +12,7 @@
 
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { DEFAULT_COLORS_LIGHT } from "../../config/defaults.ts";
 import { loadConfig } from "../../config/loader.ts";
@@ -468,8 +468,8 @@ export async function executeSuggestTool(
  *
  * This is a Tier 2 tool - requires config (.north/config.yaml) to be present.
  */
-export function registerSuggestTool(server: McpServer): void {
-  server.registerTool(
+export function registerSuggestTool(server: McpServer): RegisteredTool {
+  return server.registerTool(
     "north_suggest",
     {
       description:

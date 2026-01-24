@@ -7,7 +7,7 @@
  * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
 
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { runLint } from "../../lint/engine.ts";
 import type { LintIssue, RuleSeverity } from "../../lint/types.ts";
@@ -331,8 +331,8 @@ export async function executeRefactorTool(
  *
  * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
-export function registerRefactorTool(server: McpServer): void {
-  server.registerTool(
+export function registerRefactorTool(server: McpServer): RegisteredTool {
+  return server.registerTool(
     "north_refactor",
     {
       description:

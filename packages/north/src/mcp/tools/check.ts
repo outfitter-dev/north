@@ -13,7 +13,7 @@
 
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { runLint } from "../../lint/engine.ts";
 import type { LintIssue, LintStats, LintSummary } from "../../lint/types.ts";
@@ -354,8 +354,8 @@ export async function executeCheckTool(
  *
  * This is a Tier 2 tool - requires config (.north/config.yaml) to be present.
  */
-export function registerCheckTool(server: McpServer): void {
-  server.registerTool(
+export function registerCheckTool(server: McpServer): RegisteredTool {
+  return server.registerTool(
     "north_check",
     {
       description:

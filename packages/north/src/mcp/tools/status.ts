@@ -5,9 +5,9 @@
  * Always available (Tier 1) - works without any configuration.
  */
 
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getToolsForState } from "../server.ts";
+import { TIERED_TOOLS, getToolsForState } from "../server.ts";
 import { detectContext } from "../state.ts";
 import type { ServerState } from "../types.ts";
 
@@ -26,6 +26,10 @@ export const StatusInputSchema = z.object({
 });
 
 export type StatusInput = z.infer<typeof StatusInputSchema>;
+
+export interface StatusToolOptions {
+  onRefresh?: () => void | Promise<void>;
+}
 
 // ============================================================================
 // Guidance
@@ -86,6 +90,8 @@ export interface StatusResponse {
   guidance: string[];
   /** Tools available at current tier */
   availableTools: string[];
+  /** Tools unavailable at current tier with lock reasons */
+  lockedTools: Record<string, string>;
 }
 
 // ============================================================================
@@ -104,6 +110,21 @@ export async function executeStatusTool(): Promise<StatusResponse> {
 
   // Get tools available at current tier
   const availableTools = getToolsForState(ctx.state).map((t) => t.name);
+  const availableSet = new Set(availableTools);
+  const lockedTools: Record<string, string> = {};
+
+  for (const tool of TIERED_TOOLS) {
+    if (availableSet.has(tool.name)) continue;
+
+    if (ctx.state === "none") {
+      lockedTools[tool.name] =
+        tool.tier === 2
+          ? "Requires project config (.north/config.yaml)."
+          : "Requires project config and a built index.";
+    } else if (ctx.state === "config") {
+      lockedTools[tool.name] = "Requires a built index (.north/state/index.db).";
+    }
+  }
 
   return {
     state: ctx.state,
@@ -118,6 +139,7 @@ export async function executeStatusTool(): Promise<StatusResponse> {
     },
     guidance: getGuidance(ctx.state),
     availableTools,
+    lockedTools,
   };
 }
 
@@ -133,7 +155,7 @@ const STATUS_DESCRIPTION =
 /**
  * Handler for north_status and its alias north_doctor.
  */
-function createStatusHandler(server: McpServer) {
+function createStatusHandler(onRefresh?: () => void | Promise<void>) {
   return async (args: unknown) => {
     // Parse and validate input
     const parseResult = StatusInputSchema.safeParse(args);
@@ -161,8 +183,8 @@ function createStatusHandler(server: McpServer) {
     const status = await executeStatusTool();
 
     // When refresh is requested, notify clients that tool list may have changed
-    if (input.refresh) {
-      server.sendToolListChanged();
+    if (input.refresh && onRefresh) {
+      await onRefresh();
     }
 
     return {
@@ -186,14 +208,18 @@ function createStatusHandler(server: McpServer) {
  * `notifications/tools/list_changed` to notify clients of potential
  * tool availability changes.
  */
-export function registerStatusTool(server: McpServer): void {
-  server.registerTool(
+export function registerStatusTool(
+  server: McpServer,
+  options: StatusToolOptions = {}
+): RegisteredTool {
+  const onRefresh = options.onRefresh ?? (() => server.sendToolListChanged());
+  return server.registerTool(
     "north_status",
     {
       description: STATUS_DESCRIPTION,
       inputSchema: StatusInputSchema,
     },
-    createStatusHandler(server)
+    createStatusHandler(onRefresh)
   );
 }
 
@@ -201,13 +227,17 @@ export function registerStatusTool(server: McpServer): void {
  * Register the north_doctor alias for north_status.
  * This matches the 'north doctor' CLI command for discoverability.
  */
-export function registerStatusAlias(server: McpServer): void {
-  server.registerTool(
+export function registerStatusAlias(
+  server: McpServer,
+  options: StatusToolOptions = {}
+): RegisteredTool {
+  const onRefresh = options.onRefresh ?? (() => server.sendToolListChanged());
+  return server.registerTool(
     "north_doctor",
     {
       description: `${STATUS_DESCRIPTION} (Alias for north_status, matches 'north doctor' CLI command.)`,
       inputSchema: StatusInputSchema,
     },
-    createStatusHandler(server)
+    createStatusHandler(onRefresh)
   );
 }

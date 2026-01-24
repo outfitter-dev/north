@@ -9,7 +9,7 @@
  * @see .scratch/mcp-server/13-cli-adopt-spec.md for CLI specification
  */
 
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { type AdoptReport, adopt } from "../../commands/adopt.ts";
 import { detectContext } from "../state.ts";
@@ -206,8 +206,8 @@ export async function executeAdoptTool(
  *
  * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
-export function registerAdoptTool(server: McpServer): void {
-  server.registerTool(
+export function registerAdoptTool(server: McpServer): RegisteredTool {
+  return server.registerTool(
     "north_adopt",
     {
       description:

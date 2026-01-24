@@ -11,7 +11,7 @@
  * @issue #85
  */
 
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { buildIndex } from "../../index/build.ts";
 import { checkIndexFresh, getIndexStatus } from "../../index/queries.ts";
@@ -140,8 +140,8 @@ export async function executeIndexTool(
  * This is a Tier 2 tool - requires config (.north/config.yaml) to be present,
  * but does not require an existing index since it creates one.
  */
-export function registerIndexTool(server: McpServer): void {
-  server.registerTool(
+export function registerIndexTool(server: McpServer): RegisteredTool {
+  return server.registerTool(
     "north_index",
     {
       description:

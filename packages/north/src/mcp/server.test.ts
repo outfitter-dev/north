@@ -167,7 +167,7 @@ describe("tool registration completeness", () => {
       }
 
       // Check if function is called: registerFoo(server)
-      const callPattern = new RegExp(`\\b${fn}\\s*\\(\\s*server\\s*\\)`);
+      const callPattern = new RegExp(`\\b${fn}\\s*\\(\\s*server\\b`);
       if (!callPattern.test(serverContent)) {
         missingCalls.push(`${fn} (from ${file})`);
       }

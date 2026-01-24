@@ -7,7 +7,7 @@
  * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
 
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer, RegisteredTool } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { type IndexDatabase, openIndexDatabase } from "../../index/db.ts";
 import { checkIndexFresh, getIndexStatus } from "../../index/queries.ts";
@@ -795,8 +795,8 @@ function createDiscoverHandler() {
  *
  * This is a Tier 3 tool - requires index (.north/state/index.db) to be present.
  */
-export function registerDiscoverTool(server: McpServer): void {
-  server.registerTool(
+export function registerDiscoverTool(server: McpServer): RegisteredTool {
+  return server.registerTool(
     "north_discover",
     {
       description: DISCOVER_DESCRIPTION,
@@ -809,8 +809,8 @@ export function registerDiscoverTool(server: McpServer): void {
  * Register the north_find alias for north_discover.
  * This matches the 'north find' CLI command for discoverability.
  */
-export function registerDiscoverAlias(server: McpServer): void {
-  server.registerTool(
+export function registerDiscoverAlias(server: McpServer): RegisteredTool {
+  return server.registerTool(
     "north_find",
     {
       description: `${DISCOVER_DESCRIPTION} (Alias for north_discover, matches 'north find' CLI command.)`,
