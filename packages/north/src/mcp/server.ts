@@ -302,7 +302,7 @@ export function createServerWithTools(): {
     if (stateChanged) {
       currentState = nextState;
       const toolsChanged = applyToolState(registry, nextState);
-      if (!toolsChanged && options.forceNotify) {
+      if (toolsChanged || options.forceNotify) {
         server.sendToolListChanged();
       }
       return currentState;
