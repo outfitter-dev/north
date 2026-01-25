@@ -10,11 +10,13 @@ You can run North without installing it:
 bunx @outfitter/north init
 ```
 
-If you want it in your toolchain:
+If you want `north` on your PATH:
 
 ```bash
 bun add -D @outfitter/north
 ```
+
+From here on, the docs assume `north` is available.
 
 ## 1) Initialize
 
