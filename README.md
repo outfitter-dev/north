@@ -38,6 +38,8 @@ Lint summary
   warn : repeated-spacing-pattern (gap-6 appears 12 times)
 ```
 
+This is how agents stop guessing and start tracing.
+
 ## Where North starts (and where it doesn't)
 
 - **Tailwind** handles the utility syntax and build pipeline.
@@ -57,11 +59,17 @@ Lint summary
 
 ```bash
 bunx @outfitter/north init
-bunx @outfitter/north gen
-bunx @outfitter/north index
-bunx @outfitter/north check
+north gen
+north index
+north check
 
-bunx @outfitter/north find --patterns
+north find --patterns
+```
+
+If you want `north` on your PATH, install it once:
+
+```bash
+bun add -D @outfitter/north
 ```
 
 ## Why this helps agents stay on the trail
